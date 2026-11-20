@@ -1,0 +1,410 @@
+/* Home page: search, state tiles, sections with their pages.
+   On a phone the same order, one column. */
+
+/* ---------- Search ---------- */
+
+.home-hero {
+    margin: 4px 0 18px;
+}
+
+.home-hero-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+}
+
+.home-hero h1 {
+    margin: 0 0 4px;
+    font-size: var(--fs-xl);
+}
+
+.home-hero p {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.home-freshness {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--ok-soft);
+    color: var(--ok-text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.home-freshness-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ok);
+}
+
+.home-freshness-time {
+    color: inherit;
+    font-weight: 400;
+    opacity: .85;
+}
+
+.home-freshness.is-late { background: light-dark(#fef3c7, #413814); color: light-dark(#78350f, #f3b896); }
+.home-freshness.is-late .home-freshness-dot { background: var(--warn); }
+.home-freshness.is-stale,
+.home-freshness.is-unknown { background: light-dark(#fde2e2, #341212); color: light-dark(#8b1c1c, #ec9494); }
+.home-freshness.is-stale .home-freshness-dot,
+.home-freshness.is-unknown .home-freshness-dot { background: var(--danger); }
+
+.home-search {
+    display: flex;
+    gap: 8px;
+    max-width: 760px;
+}
+
+.home-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.home-search input {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 15px;
+    outline: none;
+}
+
+.home-search input:focus {
+    border-color: #6d9ff5;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.home-search .button {
+    padding: 0 18px;
+}
+
+/* Suggestions under the search box. */
+.home-suggest {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    max-height: min(420px, 60vh);
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .16);
+}
+
+.home-suggest-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1px 10px;
+    align-items: baseline;
+    padding: 7px 9px;
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.home-suggest-item.is-active,
+.home-suggest-item:hover {
+    background: var(--surface-hover);
+}
+
+.home-suggest-kind {
+    grid-row: span 2;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.home-suggest-label {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.home-suggest-detail {
+    grid-column: 2;
+    color: var(--text-muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.home-suggest-empty {
+    padding: 9px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.home-suggest-all {
+    display: block;
+    margin-top: 2px;
+    padding: 8px 9px;
+    border-top: 1px solid var(--border-subtle);
+    color: var(--accent-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.home-suggest-all:hover {
+    background: var(--surface-hover);
+}
+
+.home-examples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 9px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.home-examples button {
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.home-examples button:hover {
+    border-color: light-dark(#93b4f5, #2d426d);
+    background: var(--surface-hover);
+}
+
+/* ---------- State tiles ---------- */
+
+/* ---------- Sections ---------- */
+
+.home-groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 6px 0 28px;
+}
+
+.home-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.home-group-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.home-icon {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 7px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background: var(--surface-hover);
+    fill: none;
+    stroke: #2563eb;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.home-group-head h2 {
+    margin: 0;
+    font-size: 19px;
+    color: var(--text);
+}
+
+.home-group-head p {
+    margin: 3px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* The pages of a section: big buttons, the description in a tooltip. */
+.home-subs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.home-sub {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+        min-height: 46px;
+    padding: 9px 16px;
+    text-align: center;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--accent-text);
+    text-decoration: none;
+    transition: background .12s, border-color .12s, box-shadow .12s, transform .12s;
+}
+
+.home-sub-title {
+    font-size: var(--fs-md);
+    font-weight: 600;
+}
+
+.home-sub:hover,
+.home-sub:focus-visible {
+    text-decoration: none;
+        border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.home-sub-tip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 20;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: var(--header-bg);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .22);
+    color: #f3f4f6;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity .12s, transform .12s, visibility .12s;
+    pointer-events: none;
+}
+
+.home-sub-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: calc(50% - 6px);
+    border: 6px solid transparent;
+        border-top-color: var(--header-bg);
+}
+
+.home-sub:hover .home-sub-tip,
+.home-sub:focus-visible .home-sub-tip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Touch screens have no hover: the description is shown under the title. */
+@media (hover: none) {
+    .home-sub {
+        flex-wrap: wrap;
+    }
+
+    .home-sub-tip {
+        position: static;
+        order: 3;
+        flex-basis: 100%;
+        margin-top: 4px;
+        padding: 0;
+        background: none;
+        box-shadow: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition: none;
+    }
+
+    .home-sub-tip::after {
+        display: none;
+    }
+}
+
+@media (max-width: 1100px) {
+    .home-groups {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 800px) {
+    .home-hero h1 {
+        font-size: 24px;
+    }
+
+    .home-hero-head {
+        align-items: flex-start;
+    }
+
+    
+
+    .home-search .button {
+        padding: 0 12px;
+    }
+}
+
+/* Two-line captions: lines of about the same width, not "a long line + one word". */
+.home-group-head p,
+.home-sub-tip,
+.home-hero p {
+    text-wrap: balance;
+}
+
+/* Maps: every map, one click away. */
+.home-map-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home-map-list a {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+}
+
+.home-map-list a:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+}

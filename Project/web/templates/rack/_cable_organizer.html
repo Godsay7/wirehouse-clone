@@ -1,0 +1,31 @@
+{# Cable organizer (1U/2U). Uses: rack_row, editable, rack, current_side. #}
+{% set organizer = rack_row.device.data %}
+{# Signed in, Rack Change: the top block (with the header) is dragged to another unit (js/rack_move.js);
+   rack_unit is its BOTTOM U. #}
+<div class="rack-device cable-organizer cable-organizer-{{ organizer.segment }}"{% if editable and organizer.is_primary %} data-move-url="{{ url_for('equipment.move_organizer', rack_id=rack.id, organizer_id=organizer.id) }}" data-move-key="cable_organizer-{{ organizer.id }}" data-move-top="{{ organizer.rack_unit + organizer.height_units - 1 }}" data-move-height="{{ organizer.height_units }}" data-move-name="{{ organizer.name }}"{% endif %}>
+    {% if organizer.is_primary %}
+        <div class="rack-device-header">
+            <div>
+                <div class="rack-device-name">{{ organizer.name }}</div>
+                <div class="rack-device-meta">{{ _("Cable Organizer") }} · {{ organizer.height_units }}U</div>
+            </div>
+
+            {% if editable %}
+                <form
+                    class="rack-remove-form"
+                    method="post"
+                    action="{{ url_for('equipment.delete_organizer', rack_id=rack.id, organizer_id=organizer.id, side=current_side) }}"
+                    hx-confirm="{{ _("Remove this cable organizer?") }}"
+                >
+                    <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="cable-organizer-body" title="{{ organizer.name }} · {{ organizer.height_units }}U">
+        {% for _ in range(8) %}
+            <span class="cable-organizer-loop"></span>
+        {% endfor %}
+    </div>
+</div>

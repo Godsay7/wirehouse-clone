@@ -1,0 +1,131 @@
+/* ============================================================
+   Change History
+   ============================================================ */
+
+.changes-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+.changes-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+
+.changes-table th,
+.changes-table td {
+    vertical-align: middle;
+}
+
+
+/* Date */
+
+.changes-table .change-date {
+    width: 175px;
+    min-width: 175px;
+    max-width: 175px;
+
+    white-space: nowrap;
+}
+
+
+/* Switch */
+
+.changes-table .change-switch {
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Port */
+
+.changes-table .change-port {
+    width: 65px;
+    min-width: 65px;
+    max-width: 65px;
+
+    text-align: center;
+}
+
+
+/* Change type */
+
+.changes-table .change-type {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+}
+
+
+/* Before / After */
+
+.changes-table .change-value {
+    width: 330px;
+    max-width: 330px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-family: var(--font-mono);
+
+    font-size: 13px;
+}
+
+
+/* Change badges */
+
+.change-badge {
+    display: inline-block;
+
+    min-width: 45px;
+
+    padding: 3px 8px;
+
+    border-radius: 4px;
+
+    text-align: center;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: white;
+
+    background: #6c757d;
+}
+
+
+.change-mac {
+    background: #7447dc;
+}
+
+
+.change-link {
+    background: #65727a;
+}
+
+
+.change-speed {
+    background: #65727a;
+}
+
+
+.change-device {
+    background: var(--accent);
+}
+
+
+.empty-history {
+    padding: 30px;
+
+    text-align: center;
+
+    color: var(--text-muted);
+}

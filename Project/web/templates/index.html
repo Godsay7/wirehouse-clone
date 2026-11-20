@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% from "_time.html" import ago with context %}
+
+{% block title %}{{ _("Dashboard") }}{% endblock %}
+
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v={{ asset_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rack/cable-path.css') }}?v={{ asset_version }}">
+<script src="{{ url_for('static', filename='js/cable_path.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+
+{% block content %}
+
+
+
+
+<div class="inventory-search-card">
+    <form
+        class="inventory-search-form"
+        method="get"
+        action="{{ url_for('dashboard.index') }}"
+        data-live-search
+        hx-get="{{ url_for('dashboard.index') }}"
+        hx-trigger="submit, input delay:400ms from:find input"
+        hx-target="#dashboard-live"
+        hx-select="#dashboard-live"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+    >
+        <input
+            type="search"
+            name="search"
+            value="{{ search }}"
+            placeholder="{{ _("Search IP, MAC, hostname, device, socket, rack...") }}"
+            autocomplete="off"
+        >
+        <button class="button" type="submit">{{ _("Search") }}</button>
+        <a
+            class="button secondary"
+            href="{{ url_for('dashboard.index') }}"
+            data-search-clear
+            data-hide-when-empty
+            {% if not search %}style="display: none"{% endif %}
+        >{{ _("Clear") }}</a>
+    </form>
+    <div class="inventory-search-help">
+        {{ _("Find which switch and physical port a device is connected to by IP address, MAC address, DNS hostname or port Device/Description — and everything documented in Rack Change and Floor Maps: port descriptions, sockets, servers, patch panels, racks, workplaces.") }}
+        {{ _("Type “vlan 140” to list every port of a VLAN.") }}
+    </div>
+</div>
+
+{# Search results, statistics and the switch list refresh after every
+   collector run and on every search without reloading the page. #}
+<div
+    id="dashboard-live"
+    hx-get="{{ request.full_path }}"
+    hx-trigger="inventory-changed from:body"
+    hx-select="#dashboard-live"
+    hx-swap="outerHTML"
+>
+{% include "_versions.html" %}
+
+{% if errors_only %}
+<div class="inventory-search-results">
+    <div class="inventory-search-summary">
+        {{ _("Ports whose error counters grew in the last {n} h", n=error_window_hours) }}: <strong>{{ error_ports | length }}</strong>.
+        <a href="{{ url_for('dashboard.index') }}">{{ _("Show all switches") }}</a>
+    </div>
+    {% if error_ports %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _("Switch") }}</th>
+                    <th>{{ _("Port") }}</th>
+                    <th>{{ _("Interface") }}</th>
+                    <th title="{{ _("Bad frames: usually a cable, a socket or an optic") }}">CRC</th>
+                    <th>{{ _("In") }}</th>
+                    <th>{{ _("Out") }}</th>
+                    <th>{{ _("Total") }}</th>
+                    <th>{{ _("Last growth") }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in error_ports %}
+                {% set port_url = url_for('switches.view', switch_id=row.switch_id, search=(row.if_name or row.port)) %}
+                <tr class="row-link" data-href="{{ port_url }}">
+                    <td><a class="row-link-main" href="{{ port_url }}"><strong>{{ row.host }}</strong></a></td>
+                    <td><strong>{{ row.port }}</strong></td>
+                    <td class="inventory-search-mono">{{ row.if_name or '-' }}</td>
+                    <td>{{ row.fcs_errors or '–' }}</td>
+                    <td>{{ row.in_errors or '–' }}</td>
+                    <td>{{ row.out_errors or '–' }}</td>
+                    <td class="down"><strong>{{ row.total }}</strong></td>
+                    <td>{{ format_datetime(row.last) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if search %}
+<div class="inventory-search-results">
+    <div class="inventory-search-summary">
+        {% if search_results or doc_results %}
+            {{ _("Found") }} {{ _n("{n} switch port", "{n} switch ports", search_results|length) }}
+            {{ _("and") }} {{ _n("{n} documentation result", "{n} documentation results", doc_results|length) }} {{ _("for") }} <strong>{{ search }}</strong>.
+        {% else %}
+            {{ _("Nothing found for") }} <strong>{{ search }}</strong>.
+        {% endif %}
+    </div>
+
+    {% if search_results %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ _("Switch") }}</th>
+                    <th>{{ _("Port") }}</th>
+                    <th>{{ _("Interface") }}</th>
+                    <th>{{ _("Device") }}</th>
+                    <th>IP</th>
+                    <th>{{ _("Hostname") }}</th>
+                    <th>MAC</th>
+                    <th>VLAN</th>
+                    <th>{{ _("Link") }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in search_results %}
+                {% set port_url = url_for('switches.view', switch_id=result.switch_id, search=(result.if_name or result.port)) %}
+                <tr class="row-link" data-href="{{ port_url }}">
+                    <td><a class="row-link-main" href="{{ port_url }}"><strong>{{ result.switch_name }}</strong></a></td>
+                    <td><strong>{{ result.port }}</strong></td>
+                    <td class="inventory-search-mono">{{ result.if_name or '-' }}</td>
+                    <td class="inventory-search-device">{{ result.device or '-' }}</td>
+                    <td class="inventory-search-mono inventory-search-list">{{ result.ip_display }}</td>
+                    <td class="inventory-search-list inventory-search-hostname">{% if result.hostname_source == "manual" %}<span class="manual-name" title="{{ _("Typed in by hand") }}">{{ result.hostname_display }}</span>{% elif result.hostname_source == "doc" %}<span class="doc-name" title="{{ _("From the documentation: DNS has no name for this address") }}">{{ result.hostname_display }}</span>{% else %}{{ result.hostname_display }}{% endif %}</td>
+                    <td class="inventory-search-mono inventory-search-list inventory-search-mac">{{ result.mac_display }}</td>
+                    <td class="inventory-search-mono inventory-search-list" title="{{ result.vlan_text }}">{{ (result.vlan_text or '-') | replace(",", ", ") }}</td>
+                    <td class="{{ 'up' if result.link == 'UP' else ('down' if result.link == 'DOWN' else '') }}">
+                        {{ result.link or '-' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if doc_results %}
+    <h3 class="doc-results-title">{{ _("Documentation") }} <small>{{ _("Rack Change · Floor Maps") }}</small></h3>
+    <div class="table-container">
+        <table class="doc-results">
+            <thead>
+                <tr>
+                    <th>{{ _("Type") }}</th>
+                    <th>{{ _("Name") }}</th>
+                    <th>{{ _("Description") }}</th>
+                    <th>{{ _("Location") }}</th>
+                    <th>{{ _("Cable leads to") }}</th>
+                    <th>{{ _("Action") }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in doc_results %}
+                <tr>
+                    <td><span class="doc-kind">{{ _(row.kind) }}</span></td>
+                    <td><strong>{{ row.title | tr }}</strong></td>
+                    <td class="inventory-search-device">{{ row.text or '-' }}</td>
+                    <td>{{ row.room | tr }}{% if row.rack and row.kind != "Rack" %} / {{ row.rack }}{% endif %}{% if row.unit %} · U{{ row.unit }}{% endif %}{% if row.rack_id %} · {{ _(row.side | capitalize) }}{% endif %}</td>
+                    <td>{{ (row.cabled_to or "-") | tr }}</td>
+                    <td class="doc-actions">
+                        {% if row.rack_id %}
+                        <a class="button secondary" href="{{ rack_url(row.rack_id, row.side, row.element_id) }}">{{ _("Rack") }}</a>
+                        {% endif %}
+                        {% if row.endpoint and row.cabled_to %}
+                        <button type="button" class="button secondary doc-path"
+                                data-endpoint-type="{{ row.endpoint[0] }}"
+                                data-{{ {'switch': 'switch-id', 'patch': 'patch-panel-id', 'server': 'server-id'}[row.endpoint[0]] }}="{{ row.endpoint[1] }}"
+                                data-{{ {'switch': 'switch-port', 'patch': 'patch-port', 'server': 'server-port'}[row.endpoint[0]] }}="{{ row.endpoint[2] }}">{{ _("Path") }}</button>
+                        {% endif %}
+                        {% if row.map_id %}
+                        <a class="button secondary" href="{{ url_for('floor_maps.view', map_id=row.map_id, search=row.title) }}">{{ _("Map") }}</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+
+<div class="stats">
+    <div class="stat">
+        <span class="stat-label">{{ _("Switches") }}</span>
+        <b class="stat-value">{{ switches|length }}</b>
+    </div>
+    <div class="stat">
+        <span class="stat-label">{{ _("Total Ports") }}</span>
+        <b class="stat-value">{{ statistics.total_ports or 0 }}</b>
+    </div>
+    <div class="stat is-good">
+        <span class="stat-label">UP</span>
+        <b class="stat-value up">{{ statistics.up_ports or 0 }}</b>
+    </div>
+    <div class="stat">
+        <span class="stat-label">DOWN</span>
+        <b class="stat-value">{{ statistics.down_ports or 0 }}</b>
+    </div>
+    <div class="stat">
+        <span class="stat-label">{{ _("MAC Addresses") }}</span>
+        <b class="stat-value">{{ statistics.mac_count or 0 }}</b>
+    </div>
+    <a class="stat {{ 'is-bad' if statistics.error_ports else 'is-good' }}" href="{{ url_for('dashboard.index', errors=1) }}" title="{{ _("Error counters grew in the last {n} h", n=error_window_hours) }}">
+        <span class="stat-label">{{ _("Ports with errors") }}</span>
+        <b class="stat-value {{ 'down' if statistics.error_ports else '' }}">{{ statistics.error_ports or 0 }}</b>
+    </a>
+</div>
+
+
+<h2>
+    {{ _("Switches") }}
+</h2>
+
+
+<div class="table-container">
+
+<table class="switches-table">
+
+<thead>
+<tr>
+
+    <th>
+        {{ _("Switch") }}
+    </th>
+
+    <th class="num">
+        {{ _("Ports") }}
+    </th>
+
+    <th class="num">
+        UP
+    </th>
+
+    <th class="num">
+        DOWN
+    </th>
+
+    <th class="num" title="{{ _("Error counters grew in the last {n} h", n=error_window_hours) }}">
+        {{ _("Errors") }}
+    </th>
+
+    <th>
+        {{ _("Last Seen") }}
+    </th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for switch in switches %}
+
+{# The whole row opens the switch (js/row_links.js); the name is the real link. #}
+<tr class="row-link" data-href="{{ url_for('switches.view', switch_id=switch.id) }}">
+
+    <td>
+        <div class="switch-name-with-vendor">
+            <a class="row-link-main" href="{{ url_for('switches.view', switch_id=switch.id) }}">
+                <strong>{{ switch.host }}</strong>
+            </a>
+
+            <span class="vendor-badge vendor-{{ switch.manufacturer_slug }}">
+                {{ switch.manufacturer_name }}
+            </span>
+        </div>
+    </td>
+
+    <td class="num">
+        {{ switch.port_count }}
+    </td>
+
+    <td class="num up">
+        {{ switch.up_count or 0 }}
+    </td>
+
+    {# DOWN is not a fault by itself: free ports are down. #}
+    <td class="num">
+        {{ switch.down_count or 0 }}
+    </td>
+
+    <td class="num {{ 'down' if switch.error_ports else 'muted' }}">
+        {{ switch.error_ports or '–' }}
+    </td>
+
+    {% set polled = minutes_ago(switch.last_seen) %}
+    <td class="{{ 'is-stale' if polled is not none and polled >= 20 else '' }}">
+        {{ ago(switch.last_seen, polled) }}
+    </td>
+
+</tr>
+
+{% else %}
+
+<tr>
+
+    <td colspan="6">
+        {{ _("No switches found.") }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+
+</div>
+
+<script>
+document.addEventListener("click", event => {
+    const button = event.target.closest(".doc-path");
+    if (button && window.CablePath) window.CablePath.open(button);
+});
+</script>
+
+{% endblock %}

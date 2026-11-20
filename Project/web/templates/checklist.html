@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Cable checklist") }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checklist.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{# For signed-in users (blueprints/checklist.py); they share one checklist.
+   The marks are kept only here: not in Rack History, not on other pages. #}
+{% set confirmed = rows | selectattr("status", "equalto", "confirmed") | list | length %}
+{% set changed = rows | selectattr("status", "equalto", "changed") | list | length %}
+{% set mismatched = rows | selectattr("status", "equalto", "mismatch") | list | length %}
+{% set work = rows | selectattr("needs_work") | list | length %}
+{% set labelled = rows | selectattr("label", "equalto", "yes") | list | length %}
+{% set nolabel = rows | selectattr("label", "equalto", "no") | list | length %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ _("Cable checklist") }}</h1>
+        <div class="muted-text">{{ _("Every port of every switch with its documented cable. Confirm what you have checked in the rack; mark cables to replace or to lay neatly. Signed-in users share this checklist; visitors do not see it.") }}</div>
+    </div>
+</div>
+
+<section class="cl-summary" data-cl-summary>
+    <div class="cl-progress" title="{{ _("Confirmed ports") }}">
+        <div class="cl-progress-bar" data-cl-bar style="width: {{ (100 * confirmed / (rows | length)) | round(1) if rows else 0 }}%"></div>
+    </div>
+    <span><b data-cl-count="confirmed">{{ confirmed }}</b> / {{ rows | length }} {{ _("confirmed") }}</span>
+    <span class="cl-changed"><b data-cl-count="changed">{{ changed }}</b> {{ _("changed since confirmed") }}</span>
+    <span class="cl-mismatch-count"><b data-cl-count="mismatch">{{ mismatched }}</b> {{ _("not as documented") }}</span>
+    <span class="cl-work"><b data-cl-count="work">{{ work }}</b> {{ _("cables need work") }}</span>
+    <span class="cl-label-count"><b data-cl-count="labelled">{{ labelled }}</b> {{ _("with a label") }}</span>
+    <span class="cl-nolabel-count"><b data-cl-count="nolabel">{{ nolabel }}</b> {{ _("without a label") }}</span>
+</section>
+
+{# Every switch with the share of its ports confirmed (ports with a documented
+   cable, or marked anyway), in the order of the walk; a click shows its ports. #}
+<section class="cl-switches" aria-label="{{ _("Switches") }}">
+    {% set seen = [] %}
+    {% for r in rows if r.switch_id not in seen %}{% if seen.append(r.switch_id) %}{% endif %}
+        {% set counted = rows | selectattr("switch_id", "equalto", r.switch_id) | selectattr("to_check") | list %}
+        {% set done = counted | selectattr("status", "equalto", "confirmed") | list | length %}
+        {% set percent = (100 * done / (counted | length)) | round | int if counted else 0 %}
+        <button type="button" class="cl-switch-chip{{ ' is-done' if counted and done == counted | length }}{{ ' is-started' if done and done < counted | length }}"
+                data-cl-chip="{{ r.switch_id }}" data-switch="{{ r.switch }}" title="{{ r.location or _("Not in a rack") }} · {{ _("{done} / {total} confirmed", done=done, total=counted | length) }}">
+            <span class="cl-chip-name">{{ r.switch }}</span>
+            <span class="cl-chip-percent" data-cl-chip-percent>{{ percent }}%</span>
+            <span class="cl-chip-bar"><span data-cl-chip-bar style="width: {{ percent }}%"></span></span>
+        </button>
+    {% endfor %}
+</section>
+
+<form class="cl-filters" data-cl-filters onsubmit="return false">
+    <select data-cl-place aria-label="{{ _("Location") }}">
+        <option value="">{{ _("All server rooms and racks") }}</option>
+        {% for place in rows | map(attribute="place") | unique %}<option value="{{ place }}">{{ place or _("Not in a rack") }}</option>{% endfor %}
+    </select>
+    <select data-cl-switch aria-label="{{ _("Switch") }}">
+        <option value="">{{ _("All switches") }}</option>
+        {% for name in rows | map(attribute="switch") | unique %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+    </select>
+    <select data-cl-status aria-label="{{ _("Show") }}">
+        <option value="">{{ _("All ports") }}</option>
+        <option value="todo">{{ _("Not confirmed yet") }}</option>
+        <option value="changed">{{ _("Changed since confirmed") }}</option>
+        <option value="mismatch">{{ _("Not as documented") }}</option>
+        <option value="work">{{ _("Cable needs work") }}</option>
+        <option value="nolabel">{{ _("Without a label") }}</option>
+        <option value="confirmed">{{ _("Confirmed") }}</option>
+    </select>
+    <label class="cl-check" title="{{ _("Ports with a documented cable, ports with the link up, and marked ports") }}"><input type="checkbox" data-cl-cabled checked> {{ _("Only ports to check") }}</label>
+    <input type="search" data-cl-search placeholder="{{ _("Find a port, panel, device…") }}">
+    <span class="cl-shown" data-cl-shown></span>
+</form>
+
+<div class="table-wrapper">
+<table class="data-table cl-table">
+    <thead>
+        <tr>
+            <th>{{ _("Port") }}</th>
+            <th>{{ _("Link") }}</th>
+            <th>{{ _("Cabled to") }}</th>
+            <th>{{ _("Device") }}</th>
+            <th>{{ _("Checked") }}</th>
+            <th>{{ _("Cable") }}</th>
+            <th>{{ _("Note") }}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+        {# A header for each switch, in the order of a walk through the racks. #}
+        {% if loop.first or r.switch_id != loop.previtem.switch_id %}
+        {% set ports = rows | selectattr("switch_id", "equalto", r.switch_id) | selectattr("to_check") | list %}
+        <tr class="cl-group" data-cl-group="{{ r.switch_id }}" data-switch="{{ r.switch }}" data-place="{{ r.place }}">
+            <td colspan="7">
+                <b>{{ r.switch }}</b> <span class="cl-sub">{{ r.location or _("Not in a rack") }}</span>
+                <span class="cl-group-progress" data-cl-group-progress>{{ _("{done} / {total} confirmed", done=ports | selectattr("status", "equalto", "confirmed") | list | length, total=ports | length) }}</span>
+            </td>
+        </tr>
+        {% endif %}
+        <tr class="cl-row cl-{{ r.status }}{{ ' cl-has-work' if r.needs_work }}"
+            data-cl-row data-switch-id="{{ r.switch_id }}" data-port="{{ r.port }}" data-switch="{{ r.switch }}" data-place="{{ r.place }}"
+            data-status="{{ r.status }}" data-cabled="{{ 1 if r.cabled_to else 0 }}" data-label="{{ r.label }}" data-check="{{ 1 if r.to_check else 0 }}"
+            data-text="{{ [r.switch, r.if_name, r.cabled_to, r.leads_to, r.device, r.note, r.mark_note, r.actual] | join(' ') | lower }}">
+            {# The switch and its place are in the group header above. #}
+            <td class="cl-port"><a href="{{ url_for('switches.port_history', switch_id=r.switch_id, port=r.port) }}" title="{{ r.switch }} {{ r.if_name }}">{{ r.if_name }}</a>{% if r.note %}<div class="cl-sub">{{ r.note }}</div>{% endif %}</td>
+            <td class="{{ 'up' if r.up else 'down' }} cl-nowrap">{{ r.link }}</td>
+            <td class="cl-cable">{% if r.cabled_to %}{{ r.cabled_to | tr }}{% if r.leads_to %}<div class="cl-sub">→ {{ r.leads_to | tr }}</div>{% endif %}{% else %}<span class="cl-sub">{{ _("No cable documented") }}</span>{% endif %}</td>
+            <td class="cl-device">{{ r.device | tr }}</td>
+            <td class="cl-confirm-cell">
+                <button type="button" class="cl-confirm" data-cl-field="confirmed" aria-pressed="{{ 'true' if r.status == 'confirmed' else 'false' }}"
+                        title="{{ _("The port and the patch panel / device port match the documentation") }}">
+                    <span class="cl-confirm-off">{{ _("Confirm") }}</span><span class="cl-confirm-on">✓ {{ _("Confirmed") }}</span>
+                </button>
+                <button type="button" class="cl-wrong" data-cl-field="actual" aria-pressed="{{ 'true' if r.status == 'mismatch' else 'false' }}"
+                        data-actual="{{ r.actual }}" title="{{ _("The cable goes somewhere else: write where") }}">{{ _("Not as documented") }}</button>
+                <div class="cl-sub cl-when" data-cl-when>
+                    {%- if r.status == "changed" %}<span class="cl-warn" title="{{ r.confirmed_target | tr }}">{{ _("changed since confirmed") }}</span>
+                    {%- elif r.confirmed_at %}{{ format_datetime(r.confirmed_at) }}{% if r.confirmed_by %} · {{ r.confirmed_by }}{% endif %}{% endif -%}
+                </div>
+                <div class="cl-actual" data-cl-actual{% if not r.actual %} hidden{% endif %}>
+                    <b>{{ _("Actually:") }}</b> <span data-cl-actual-text>{{ r.actual }}</span>
+                    {%- if r.mismatch_changed %} <span class="cl-sub">({{ _("the documentation has changed since") }})</span>{% endif %}
+                    {% if r.rack_id %}<div><a href="{{ rack_url(r.rack_id, r.side, 'switch-%s-port-%s' % (r.switch_id, r.port)) }}">{{ _("Fix in the rack") }} →</a></div>{% endif %}
+                </div>
+            </td>
+            <td class="cl-marks">
+                <button type="button" class="cl-mark" data-cl-field="shorter" aria-pressed="{{ 'true' if r.shorter else 'false' }}"
+                        title="{{ _("The cable must be replaced by a shorter one") }}">{{ _("Needs a shorter one") }}</button>
+                <button type="button" class="cl-mark" data-cl-field="tidy" aria-pressed="{{ 'true' if r.tidy else 'false' }}"
+                        title="{{ _("The cable must be laid neatly") }}">{{ _("Lay neatly") }}</button>
+                {# The sticker on the cable: there / missing; a second click clears the mark. #}
+                <div class="cl-label" role="group" aria-label="{{ _("Label on the cable") }}">
+                    <button type="button" class="cl-label-yes" data-cl-label="yes" aria-pressed="{{ 'true' if r.label == 'yes' else 'false' }}"
+                            title="{{ _("The cable has a label") }}">✓ {{ _("Label") }}</button>
+                    <button type="button" class="cl-label-no" data-cl-label="no" aria-pressed="{{ 'true' if r.label == 'no' else 'false' }}"
+                            title="{{ _("The cable has no label: it must be labelled") }}">✗ {{ _("No label") }}</button>
+                </div>
+            </td>
+            <td><input class="cl-note" data-cl-field="note" value="{{ r.mark_note }}" maxlength="300" placeholder="…"></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<script>
+(() => {
+    const t = (text, values) => (window.t ? window.t(text, values) : text);
+    const rows = [...document.querySelectorAll('[data-cl-row]')];
+    const groups = [...document.querySelectorAll('[data-cl-group]')];
+    const placeSelect = document.querySelector('[data-cl-place]');
+    const switchSelect = document.querySelector('[data-cl-switch]');
+    const statusSelect = document.querySelector('[data-cl-status]');
+    const cabledOnly = document.querySelector('[data-cl-cabled]');
+    const search = document.querySelector('[data-cl-search]');
+    const shown = document.querySelector('[data-cl-shown]');
+
+    // Filters (kept for this browser). "Only ports with a cable" is on by default.
+    const KEY = 'cableChecklistFilters2';
+    try {
+        const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (saved) {
+            if ([...placeSelect.options].some(o => o.value === saved.place)) placeSelect.value = saved.place;
+            if ([...switchSelect.options].some(o => o.value === saved.sw)) switchSelect.value = saved.sw;
+            if (saved.status) statusSelect.value = saved.status;
+            cabledOnly.checked = saved.cabled !== false;
+        }
+    } catch (e) { /* private window */ }
+
+    function filter() {
+        const place = placeSelect.value, sw = switchSelect.value, status = statusSelect.value;
+        const words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        let count = 0;
+        const visible = new Set();
+        rows.forEach(row => {
+            const work = row.classList.contains('cl-has-work');
+            const nolabel = row.dataset.label === 'no';
+            const ok = (!place || row.dataset.place === place)
+                && (!sw || row.dataset.switch === sw)
+                && (!cabledOnly.checked || row.dataset.check === '1')
+                && (!status || (status === 'todo' && !['confirmed'].includes(row.dataset.status)) || (status === 'work' && work) || (status === 'nolabel' && nolabel) || row.dataset.status === status)
+                && words.every(word => row.dataset.text.includes(word));
+            row.hidden = !ok;
+            if (ok) { count += 1; visible.add(row.dataset.switchId); }
+        });
+        groups.forEach(group => { group.hidden = !visible.has(group.dataset.clGroup); });
+        shown.textContent = t('{n} shown', { n: count });
+        document.querySelectorAll('[data-cl-chip]').forEach(chip => chip.classList.toggle('is-active', chip.dataset.switch === sw));
+        try {
+            localStorage.setItem(KEY, JSON.stringify({ place, sw, status, cabled: cabledOnly.checked }));
+        } catch (e) { /* private window */ }
+    }
+    [placeSelect, switchSelect, statusSelect, cabledOnly].forEach(input => input.addEventListener('change', filter));
+    search.addEventListener('input', filter);
+
+    function counts() {
+        const confirmed = rows.filter(r => r.dataset.status === 'confirmed').length;
+        document.querySelector('[data-cl-count="confirmed"]').textContent = confirmed;
+        document.querySelector('[data-cl-count="changed"]').textContent = rows.filter(r => r.dataset.status === 'changed').length;
+        document.querySelector('[data-cl-count="mismatch"]').textContent = rows.filter(r => r.dataset.status === 'mismatch').length;
+        document.querySelector('[data-cl-count="work"]').textContent = rows.filter(r => r.classList.contains('cl-has-work')).length;
+        document.querySelector('[data-cl-count="labelled"]').textContent = rows.filter(r => r.dataset.label === 'yes').length;
+        document.querySelector('[data-cl-count="nolabel"]').textContent = rows.filter(r => r.dataset.label === 'no').length;
+        document.querySelector('[data-cl-bar]').style.width = `${rows.length ? 100 * confirmed / rows.length : 0}%`;
+    }
+
+    // The group header and the chip at the top: confirmed of the ports counted.
+    function groupProgress(switchId) {
+        const own = rows.filter(r => r.dataset.switchId === String(switchId) && r.dataset.check === '1');
+        const done = own.filter(r => r.dataset.status === 'confirmed').length;
+        const text = t('{done} / {total} confirmed', { done, total: own.length });
+        const group = groups.find(g => g.dataset.clGroup === String(switchId));
+        if (group) group.querySelector('[data-cl-group-progress]').textContent = text;
+        const chip = document.querySelector(`[data-cl-chip="${switchId}"]`);
+        if (chip) {
+            const percent = own.length ? Math.round(100 * done / own.length) : 0;
+            chip.querySelector('[data-cl-chip-percent]').textContent = `${percent}%`;
+            chip.querySelector('[data-cl-chip-bar]').style.width = `${percent}%`;
+            chip.classList.toggle('is-done', own.length > 0 && done === own.length);
+            chip.classList.toggle('is-started', done > 0 && done < own.length);
+            chip.title = chip.title.replace(/[^·]*$/, ' ' + text);
+        }
+    }
+
+    // A chip shows that switch's ports (a second click shows all again).
+    document.addEventListener('click', event => {
+        const chip = event.target.closest('[data-cl-chip]');
+        if (!chip) return;
+        switchSelect.value = switchSelect.value === chip.dataset.switch ? '' : chip.dataset.switch;
+        placeSelect.value = '';
+        filter();
+        const table = document.querySelector('.cl-table');
+        if (switchSelect.value && table) table.scrollIntoView({ block: 'start' });
+    });
+
+    function show(row, data) {
+        row.dataset.status = data.status;
+        row.classList.remove('cl-open', 'cl-confirmed', 'cl-changed', 'cl-mismatch');
+        row.classList.add(`cl-${data.status}`);
+        row.classList.toggle('cl-has-work', data.needs_work);
+        row.dataset.label = data.label || '';
+        row.dataset.check = data.to_check ? '1' : '0';
+        row.querySelectorAll('[data-cl-label]').forEach(button => {
+            button.setAttribute('aria-pressed', String(button.dataset.clLabel === data.label));
+        });
+        row.querySelector('[data-cl-field="confirmed"]').setAttribute('aria-pressed', String(data.status === 'confirmed'));
+        const wrong = row.querySelector('[data-cl-field="actual"]');
+        wrong.setAttribute('aria-pressed', String(data.status === 'mismatch'));
+        wrong.dataset.actual = data.actual || '';
+        row.querySelector('[data-cl-field="shorter"]').setAttribute('aria-pressed', String(data.shorter));
+        row.querySelector('[data-cl-field="tidy"]').setAttribute('aria-pressed', String(data.tidy));
+        row.querySelector('[data-cl-when]').textContent = data.status === 'confirmed'
+            ? [data.confirmed_at, data.confirmed_by].filter(Boolean).join(' · ') : '';
+        const actual = row.querySelector('[data-cl-actual]');
+        actual.hidden = !data.actual;
+        row.querySelector('[data-cl-actual-text]').textContent = data.actual || '';
+        counts();
+        groupProgress(row.dataset.switchId);
+    }
+
+    async function save(row, field, value) {
+        row.classList.add('cl-saving');
+        try {
+            const response = await fetch('/checklist/port', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ switch_id: Number(row.dataset.switchId), port: Number(row.dataset.port), field, value }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.error || `HTTP ${response.status}`);
+            show(row, result.row);
+        } catch (error) {
+            alert(t('Could not save: {error}', { error: error.message }));
+        } finally {
+            row.classList.remove('cl-saving');
+        }
+    }
+
+    document.addEventListener('click', event => {
+        const label = event.target.closest('button[data-cl-label]');
+        if (label) {
+            // A second click on the pressed one clears the mark.
+            save(label.closest('[data-cl-row]'), 'label', label.getAttribute('aria-pressed') === 'true' ? '' : label.dataset.clLabel);
+            return;
+        }
+        const button = event.target.closest('button[data-cl-field]');
+        if (!button) return;
+        const row = button.closest('[data-cl-row]');
+        if (button.dataset.clField === 'actual') {
+            // Where the cable really goes; an empty answer clears the mark.
+            const answer = prompt(t('Where does the cable really go? (empty: clear)'), button.dataset.actual || '');
+            if (answer !== null) save(row, 'actual', answer.trim());
+            return;
+        }
+        save(row, button.dataset.clField, button.getAttribute('aria-pressed') !== 'true');
+    });
+    document.addEventListener('change', event => {
+        const input = event.target.closest('input[data-cl-field="note"]');
+        if (input) save(input.closest('[data-cl-row]'), 'note', input.value);
+    });
+
+    // After the translations (js/i18n.js, deferred) are loaded.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', filter);
+    else filter();
+})();
+</script>
+{% endblock %}

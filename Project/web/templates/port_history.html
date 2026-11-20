@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% from "switch/_macros.html" import error_parts %}
+
+{% set port_label = port.if_name or port.port %}
+{% block title %}{{ switch.host }} {{ port_label }} · {{ _("Port history") }}{% endblock %}
+
+{% block extra_css %}
+{# The switch page's styles (status badges), then this page's. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/switch.css') }}?v={{ asset_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/port_history.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{# A device: its name (or IP, or MAC), with the MAC and IP in small print. #}
+{% macro device(d) -%}
+<span class="ph-device">{{ d.name or d.ip or d.mac }}{% if d.name or d.ip %} <span class="ph-sub">{{ d.mac }}{% if d.name and d.ip %} · {{ d.ip }}{% endif %}</span>{% endif %}</span>
+{%- endmacro %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>{{ switch.host }} <span class="ph-port">{{ port_label }}</span></h1>
+        <div class="muted-text">{{ _("Port history") }} · {{ _("Port:") }} {{ port.port }}</div>
+    </div>
+    <div class="switch-header-actions">
+        <a href="{{ url_for('switches.view', switch_id=switch.id, search=port.if_name) }}" class="button secondary">{{ _("Back") }}</a>
+    </div>
+</div>
+
+{# ---------------- The port now ---------------- #}
+<section class="ph-now">
+    <div class="ph-now-item">
+        <span class="ph-label">{{ _("Link") }}</span>
+        {% if port.link == "UP" %}<span class="status-badge status-up">UP</span>
+        {% elif port.link == "DOWN" %}<span class="status-badge status-down">DOWN</span>
+        {% else %}<span class="status-badge status-unknown">-</span>{% endif %}
+        {% if port.speed and port.speed != "-" %}<span class="ph-sub">{{ port.speed }}</span>{% endif %}
+    </div>
+    <div class="ph-now-item">
+        <span class="ph-label">VLAN</span>
+        {% if port.vlan_mode == "trunk" %}trunk {{ port.vlan or "—" }}{% if port.vlan_tagged %} <span class="ph-sub">{{ port.vlan_tagged | replace(",", ", ") }}</span>{% endif %}
+        {% else %}{{ port.vlan or "-" }}{% endif %}
+    </div>
+    <div class="ph-now-item ph-now-wide">
+        <span class="ph-label">{{ _("Devices now") }}</span>
+        {% if devices | length > 4 %}{{ _("Many MACs ({n})", n=devices | length) }}
+        {% else %}
+            {% for d in devices %}<div>{{ device(d) }}</div>
+            {% else %}
+                {% if port.last_known %}<div>{{ port.last_known.name or port.last_known.mac }} <span class="ph-sub">{{ _("Last known data") }}</span></div>
+                {% else %}-{% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+    {% if port.written %}
+    <div class="ph-now-item">
+        <span class="ph-label">{{ _("Hostname") }}</span>
+        {{ port.written.name }}
+    </div>
+    {% endif %}
+    {% if port.neighbors %}
+    <div class="ph-now-item">
+        <span class="ph-label">{{ _("Neighbour") }}</span>
+        {% for label in port.neighbors %}<div>{{ label }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% if cable["Cabled to"] %}
+    <div class="ph-now-item ph-now-wide">
+        <span class="ph-label">{{ _("Cable") }}</span>
+        {{ cable["Cabled to"] | tr }}{% if cable["Cable leads to"] %} → {{ cable["Cable leads to"] | tr }}{% endif %}
+    </div>
+    {% endif %}
+    {% if cable["Port note"] %}
+    <div class="ph-now-item ph-now-wide">
+        <span class="ph-label">{{ _("Port note") }}</span>
+        {{ cable["Port note"] }}
+    </div>
+    {% endif %}
+</section>
+
+{# ---------------- What happened ---------------- #}
+<section class="ph-history">
+    <div class="ph-history-head">
+        <h2>{{ _("What happened") }}</h2>
+        <div class="ph-filters" role="group" aria-label="{{ _("Show") }}">
+            <label><input type="checkbox" data-ph-kind="link" checked> {{ _("Link and speed") }}</label>
+            <label><input type="checkbox" data-ph-kind="devices" checked> {{ _("Devices") }}</label>
+            <label><input type="checkbox" data-ph-kind="errors" checked> {{ _("Errors") }}</label>
+            <label><input type="checkbox" data-ph-kind="doc" checked> {{ _("Documentation") }}</label>
+        </div>
+    </div>
+
+    {% if events %}
+    <div class="table-wrapper">
+    <table class="data-table ph-table">
+        <thead><tr><th>{{ _("When") }}</th><th>{{ _("What") }}</th><th>{{ _("Details") }}</th></tr></thead>
+        <tbody>
+        {% for e in events %}
+        {% set group = "link" if e.kind in ("link", "speed", "vlan") else e.kind %}
+        <tr class="ph-row ph-row-{{ e.kind }}" data-ph-group="{{ group }}">
+            <td class="ph-when">{{ format_datetime(e.at) }}</td>
+            {% if e.kind == "link" %}
+                <td><span class="ph-kind {{ 'ph-up' if e.up else 'ph-down' }}">{{ _("Link came up") if e.up else _("Link went down") }}</span></td>
+                <td>{% if e.speed %}<span class="ph-sub">{{ _("Speed") }}</span> {{ e.speed.old or "-" }} → {{ e.speed.new or "-" }}{% endif %}</td>
+            {% elif e.kind == "speed" %}
+                <td><span class="ph-kind">{{ _("Speed") }}</span></td>
+                <td>{{ e.old or "-" }} → {{ e.new or "-" }}</td>
+            {% elif e.kind == "vlan" %}
+                <td><span class="ph-kind">VLAN</span></td>
+                <td>{{ e.old or "-" }} → {{ e.new or "-" }}</td>
+            {% elif e.kind == "devices" %}
+                <td><span class="ph-kind">{{ _("Devices") }}</span></td>
+                <td>
+                    {% if e.many %}
+                        {{ _("Many MACs: {old} → {new}", old=e.old_count, new=e.new_count) }}
+                    {% else %}
+                        {% for d in e.appeared %}<div class="ph-appeared">+ {{ device(d) }}</div>{% endfor %}
+                        {% for d in e.left %}<div class="ph-left">− {{ device(d) }}</div>{% endfor %}
+                    {% endif %}
+                </td>
+            {% elif e.kind == "errors" %}
+                <td><span class="ph-kind ph-down">{{ _("Errors grew") }}</span></td>
+                <td>{{ error_parts(e.errors) }}</td>
+            {% elif e.kind == "doc" %}
+                <td><span class="ph-kind ph-doc">{{ _("Documentation") }}</span>
+                    <div class="ph-sub">{% if e.user %}{{ e.user }} · {% endif %}{{ e.who | tr }}</div></td>
+                <td{% if e.undone %} class="ph-undone" title="{{ _("Undone") }}"{% endif %}>
+                    {% for line in e.lines %}<div>{{ line | tr }}</div>{% endfor %}
+                    {% if e.undone %}<div class="ph-sub">{{ _("Undone") }}</div>{% endif %}
+                </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <p class="ph-note">
+        {{ _("Device changes on ports with many devices (uplinks) are shown as counts only.") }}
+        {% if older %}<a class="button secondary" href="{{ url_for('switches.port_history', switch_id=switch.id, port=port.port, before=older) }}">{{ _("Older") }} →</a>{% endif %}
+        {% if before %}<a class="button secondary" href="{{ url_for('switches.port_history', switch_id=switch.id, port=port.port) }}">{{ _("Latest") }}</a>{% endif %}
+    </p>
+    {% else %}
+    <p class="ph-empty">{{ _("Nothing recorded on this port yet.") }}</p>
+    {% endif %}
+</section>
+
+<script>
+// Show / hide kinds of events (the choice is kept for this browser).
+(() => {
+    const boxes = document.querySelectorAll("[data-ph-kind]");
+    let hidden = [];
+    try { hidden = JSON.parse(localStorage.getItem("portHistoryHidden") || "[]"); } catch (e) { hidden = []; }
+    function apply() {
+        const off = new Set([...boxes].filter(box => !box.checked).map(box => box.dataset.phKind));
+        document.querySelectorAll("[data-ph-group]").forEach(row => { row.hidden = off.has(row.dataset.phGroup); });
+        try { localStorage.setItem("portHistoryHidden", JSON.stringify([...off])); } catch (e) { /* private window */ }
+    }
+    boxes.forEach(box => {
+        box.checked = !hidden.includes(box.dataset.phKind);
+        box.addEventListener("change", apply);
+    });
+    apply();
+})();
+</script>
+
+{% endblock %}

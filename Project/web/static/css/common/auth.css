@@ -1,0 +1,186 @@
+/* Sign-in: the person icon in the header, the login page, the notice
+   "Sign in to make changes" (js/auth.js), read-only hints. */
+
+.auth-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 0 10px;
+    padding: 3px 4px 3px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+a.auth-login {
+    padding-right: 8px;
+}
+
+a.auth-login:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.auth-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.auth-icon {
+    flex: none;
+}
+
+.auth-logout {
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.auth-logout:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+}
+
+/* Login page */
+.auth-page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 360px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.auth-form h1 {
+    margin: 0;
+}
+
+.auth-lead {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.auth-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="password"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+}
+
+.auth-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.auth-error {
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--danger-soft);
+    color: var(--danger-text);
+    font-size: 14px;
+}
+
+/* Notice from js/auth.js */
+.auth-notice {
+    position: fixed;
+    top: 76px;
+    right: 16px;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100vw - 32px);
+    padding: 12px 12px 12px 16px;
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    background: var(--header-bg);
+    color: #ffffff;
+    font-size: 14px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.auth-notice[hidden] {
+    display: none;
+}
+
+.auth-notice .button {
+    white-space: nowrap;
+}
+
+.auth-notice-close {
+    border: 0;
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.auth-notice-close:hover {
+    color: #ffffff;
+}
+
+/* Read-only hints for visitors who are not signed in */
+.auth-readonly-note {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px solid light-dark(#bfdbfe, #234064);
+    border-radius: 8px;
+    background: var(--accent-soft);
+    color: light-dark(#1e3a8a, #94abeb);
+    font-size: 14px;
+}
+
+/* Buttons that only change data are not shown to visitors at all. */
+body[data-auth="0"] [data-requires-login] {
+    display: none !important;
+}
+
+body[data-auth="0"] .rack-dashboard-grip {
+    display: none;
+}
+
+body[data-auth="0"] [data-rack-drag-handle] {
+    cursor: default;
+}
+
+@media (max-width: 760px) {
+    .auth-box {
+        margin-left: 0;
+    }
+}

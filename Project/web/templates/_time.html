@@ -1,0 +1,15 @@
+{# "5 min ago" with the exact time on hover.
+   Import with context: {% from "_time.html" import ago with context %}
+   (needs format_datetime and minutes_ago from the view). #}
+{% macro ago(at, minutes=none) -%}
+{%- set minutes = minutes if minutes is not none else minutes_ago(at) -%}
+<time class="ago" datetime="{{ at }}" title="{{ format_datetime(at) }}">
+    {%- if not at -%}–
+    {%- elif minutes is none -%}{{ format_datetime(at) }}
+    {%- elif minutes < 1 -%}{{ _("just now") }}
+    {%- elif minutes < 60 -%}{{ _n("{n} min ago", "{n} min ago", minutes) }}
+    {%- elif minutes < 1440 -%}{{ _n("{n} hour ago", "{n} hours ago", minutes // 60) }}
+    {%- else -%}{{ _n("{n} day ago", "{n} days ago", minutes // 1440) }}
+    {%- endif -%}
+</time>
+{%- endmacro %}

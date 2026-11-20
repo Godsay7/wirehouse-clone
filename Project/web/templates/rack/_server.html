@@ -1,0 +1,111 @@
+{# Server: front image on the front side, ports on the rear. A half-depth server
+   is only on its own side and has both there. Uses: rack_row, editable, rack, current_side.
+   Styles: css/rack/rack-devices.css. #}
+{% set server = rack_row.device.data %}
+{% set half_depth = server.depth == 'half' %}
+{% set show_image = (current_side == 'front' or half_depth) and server.front_image_version %}
+{% set show_ports = current_side == 'rear' or half_depth %}
+{% set show_image_control = editable and (current_side == 'front' or half_depth) %}
+
+{% if server.is_primary %}
+{# Signed in, Rack Change: dragged by its header to another unit (js/rack_move.js); rack_unit is its BOTTOM U. #}
+<div class="rack-device server-device server-device-{{ server.height_units }}u" id="server-{{ server.id }}"
+    style="--rack-device-units: {{ server.height_units }};"{% if editable %} data-move-url="{{ url_for('equipment.move_server', rack_id=rack.id, server_id=server.id) }}" data-move-key="server-{{ server.id }}" data-move-top="{{ server.rack_unit + server.height_units - 1 }}" data-move-height="{{ server.height_units }}" data-move-name="{{ server.name }}"{% endif %}>
+
+    {% if show_image %}
+    <img class="server-front-image" alt="" decoding="async"
+         src="{{ url_for('equipment.server_front_image', server_id=server.id, v=server.front_image_version) }}">
+    {% endif %}
+
+    <div class="rack-device-header server-device-header{% if show_image %} on-image{% endif %}">
+        <div class="rack-device-name" title="{{ server.name }}">{{ server.name }}</div>
+        <div class="server-device-actions">
+            <div class="rack-device-meta">
+                {% if editable %}
+                <span class="server-edit-toggle"
+                      onclick="document.getElementById('server-{{ server.id }}').classList.toggle('edit-mode');"
+                      title="{{ _("Edit Ports & Image") }}">⚙️</span>
+                {% endif %}
+                {{ _("Server") }} · {{ server.height_units }}U{% if half_depth %} · {{ _(server.side ~ " only") }}{% endif %}
+            </div>
+
+            {% if editable %}
+            <form class="rack-remove-form server-remove-form" method="post"
+                    action="/rack/{{ rack.id }}/server/{{ server.id }}/delete?side={{ current_side }}"
+                    hx-confirm="{{ _("Remove server {name}?", name=server.name) }}">
+                <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if show_ports %}
+    <div class="rack-ports server-rack-ports">
+        {% for port in server.ports if port.port == 0 %}
+        <div class="server-port-slot server-port-slot-mng">
+            <div id="server-{{ server.id }}-port-0"
+                 class="rack-port server-port server-port-mng"
+                 data-endpoint-type="server"
+                 data-server-id="{{ server.id }}"
+                 data-server-port="0"
+                 title="{{ _("Management Port") }}">
+                mng
+            </div>
+            {% if editable %}
+            <form class="server-port-control server-port-remove" method="post" action="/rack/{{ rack.id }}/server/{{ server.id }}/port/0/delete?side={{ current_side }}">
+                <button type="submit" title="{{ _("Remove Port") }}">✖</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% for port in server.ports if port.port > 0 %}
+        <div class="server-port-slot">
+            <div id="server-{{ server.id }}-port-{{ port.port }}"
+                 class="rack-port server-port"
+                 data-endpoint-type="server"
+                 data-server-id="{{ server.id }}"
+                 data-server-port="{{ port.port }}"
+                 title="{{ _("Server Port {n}", n=port.port) }}">
+                {{ port.port }}
+            </div>
+            {% if editable %}
+            <form class="server-port-control server-port-remove" method="post" action="/rack/{{ rack.id }}/server/{{ server.id }}/port/{{ port.port }}/delete?side={{ current_side }}">
+                <button type="submit" title="{{ _("Remove Port") }}">✖</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if editable %}
+        <form class="server-port-control server-port-add-form" method="post" action="/rack/{{ rack.id }}/server/{{ server.id }}/port/add?side={{ current_side }}">
+            <button type="submit" class="rack-port server-port-add" title="{{ _("Add Port") }}">+</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if show_image_control %}
+    <div class="server-port-control server-image-control">
+        <form method="post" enctype="multipart/form-data" action="/rack/{{ rack.id }}/server/{{ server.id }}/image?side={{ current_side }}">
+            <input type="file" name="image" accept="image/*">
+            <button type="submit" class="server-image-save">{{ _("Save") }}</button>
+            {% if server.front_image_version %}
+            <button type="submit" name="remove_image" value="1" class="server-image-remove">{{ _("Remove") }}</button>
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+
+    {% if editable %}
+    <form class="server-port-control server-depth-control{% if show_image_control %} after-image-control{% endif %}" method="post"
+          action="/rack/{{ rack.id }}/server/{{ server.id }}/depth?side={{ current_side }}">
+        <input type="hidden" name="depth" value="{{ 'full' if half_depth else 'half' }}">
+        <button type="submit">
+            {{ _('Span full depth (front + rear)') if half_depth else (_('Only on the rear side') if server.side == 'rear' else _('Only on the front side')) }}
+        </button>
+    </form>
+    {% endif %}
+
+</div>
+{% endif %}

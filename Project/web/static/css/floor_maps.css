@@ -1,0 +1,790 @@
+/* Floor Maps page (templates/floor_maps.html, js/floor_maps.js). */
+
+
+.fm-page {
+    --fm-border: var(--border);
+    --fm-muted: var(--text-muted);
+    --fm-accent: var(--accent-text);
+    --fm-select: #00b8d9;
+}
+
+.fm-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    margin-bottom: 14px;
+}
+
+.fm-header h1 {
+    margin: 0;
+}
+
+.fm-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.fm-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--fm-border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.fm-tab:hover {
+    border-color: var(--border-strong);
+}
+
+.fm-tab[draggable="true"] {
+    cursor: grab;
+}
+
+.fm-tab.is-dragging {
+    opacity: 0.4;
+    border-style: dashed;
+}
+
+.fm-tab.is-active {
+    border-color: #1f2937;
+    background: var(--header-bg);
+    color: #ffffff;
+}
+
+.fm-tab-count {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.15);
+    font-size: 12px;
+    text-align: center;
+}
+
+.fm-tab.is-active .fm-tab-count {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.fm-tab-new {
+    border-style: dashed;
+    color: var(--fm-accent);
+}
+
+.fm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-bottom: 10px;
+}
+
+.fm-mode,
+.fm-tools {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.fm-tools[hidden] {
+    display: none;
+}
+
+.fm-mode-button,
+.fm-tool {
+    padding: 6px 12px;
+    border: 1px solid var(--fm-border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.fm-mode-button:hover,
+.fm-tool:hover {
+    border-color: var(--border-strong);
+}
+
+.fm-mode-button.is-active {
+    border-color: #1f2937;
+    background: var(--header-bg);
+    color: #ffffff;
+}
+
+.fm-tool.is-active {
+    border-color: var(--fm-accent);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+
+.fm-tool-settings {
+    margin-left: 8px;
+}
+
+.fm-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.fm-search input {
+    width: 240px;
+    max-width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--fm-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+}
+
+.fm-search-count {
+    color: var(--fm-muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.fm-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.fm-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 14px;
+    align-items: start;
+}
+
+.fm-canvas {
+    position: relative;
+    border: 1px solid var(--fm-border);
+    border-radius: 8px;
+    background: var(--surface);
+    overflow: hidden;
+}
+
+/* Scrolls when the map is zoomed in; tooltip and status stay in .fm-canvas. */
+.fm-viewport {
+    max-height: calc(100vh - 210px);
+    min-height: 320px;
+    overflow: auto;
+}
+
+.fm-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    margin: 0 auto;
+    touch-action: none;
+    user-select: none;
+}
+
+.fm-svg.is-panning,
+.fm-svg.is-panning * {
+    cursor: grabbing !important;
+}
+
+.fm-zoom {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.fm-zoom-level {
+    min-width: 58px;
+    font-variant-numeric: tabular-nums;
+}
+
+.fm-svg[data-tool="room"],
+.fm-svg[data-tool="area"],
+.fm-svg[data-tool="workplace"],
+.fm-svg[data-tool="phone"],
+.fm-svg[data-tool="wifi"] {
+    cursor: crosshair;
+}
+
+/* Floor and grid */
+
+.fm-floor {
+    fill: var(--surface-2);
+}
+
+.fm-grid-line {
+    fill: none;
+    stroke: var(--border-subtle);
+    stroke-width: 0.04;
+}
+
+.fm-grid-line-major {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 0.06;
+}
+
+.fm-svg:not(.is-editing) .fm-grid {
+    opacity: 0.5;
+}
+
+/* Rooms */
+
+.fm-room-shape {
+    fill: var(--surface);
+    stroke: var(--text-2);
+    stroke-width: 0.12;
+    stroke-linejoin: round;
+}
+
+.fm-room:hover .fm-room-shape {
+    fill: var(--surface-3);
+}
+
+.fm-room.is-selected .fm-room-shape {
+    stroke: var(--fm-select);
+    stroke-width: 0.18;
+}
+
+.fm-room-name {
+    fill: var(--text-muted);
+    font-size: 1.4px;
+    font-weight: bold;
+    letter-spacing: 0.04px;
+    dominant-baseline: hanging;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.fm-svg.is-editing[data-tool="select"] .fm-room-shape {
+    cursor: move;
+}
+
+/* Work areas: see-through, dashed border, drawn above rooms. */
+.fm-area .fm-room-shape {
+    fill: transparent;
+    stroke: #7c3aed;
+    stroke-width: 0.12;
+    stroke-dasharray: 0.6 0.4;
+}
+
+.fm-area:hover .fm-room-shape {
+    fill: rgba(124, 58, 237, 0.05);
+}
+
+.fm-area.is-selected .fm-room-shape {
+    stroke: var(--fm-select);
+    stroke-width: 0.18;
+}
+
+.fm-area .fm-room-name {
+    fill: #7c3aed;
+    font-size: 1.1px;
+}
+
+/* Sides of rooms and areas that can be dragged (Edit, Select tool). */
+.fm-edge {
+    stroke: transparent;
+    stroke-width: 0.9;
+    stroke-linecap: round;
+}
+
+.fm-edge:hover {
+    stroke: rgba(0, 184, 217, 0.35);
+}
+
+.fm-edge-horizontal {
+    cursor: ns-resize;
+}
+
+.fm-edge-vertical {
+    cursor: ew-resize;
+}
+
+.fm-edge-diagonal {
+    cursor: move;
+}
+
+/* Workplaces */
+
+.fm-workplace {
+    cursor: pointer;
+}
+
+.fm-svg.is-editing[data-tool="select"] .fm-workplace {
+    cursor: grab;
+}
+
+.fm-workplace-shape {
+    stroke: rgba(15, 23, 42, 0.35);
+    stroke-width: 0.06;
+}
+
+.fm-workplace:hover .fm-workplace-shape {
+    stroke: var(--text);
+    stroke-width: 0.12;
+}
+
+.fm-workplace.is-selected .fm-workplace-shape {
+    stroke: var(--fm-select);
+    stroke-width: 0.22;
+}
+
+.fm-workplace-glyph {
+    fill: light-dark(rgba(255, 255, 255, 0.85), rgba(27, 27, 27, 0.85));
+    pointer-events: none;
+}
+
+.fm-workplace-glyph-stand {
+    fill: none;
+    stroke: light-dark(rgba(255, 255, 255, 0.85), rgba(56, 56, 56, 0.85));
+    stroke-width: 0.12;
+    pointer-events: none;
+}
+
+.fm-workplace-label {
+    fill: var(--text);
+    font-size: 0.9px;
+    font-weight: bold;
+    text-anchor: middle;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 0.3;
+    stroke-linejoin: round;
+}
+
+/* Phones and Wi-Fi points: label to the right of the icon. */
+.fm-device-label {
+    text-anchor: start;
+    dominant-baseline: middle;
+    font-size: 0.85px;
+}
+
+.fm-glyph-wifi {
+    stroke-width: 0.13;
+    stroke-linecap: round;
+}
+
+.fm-workplace.is-dimmed {
+    opacity: 0.2;
+}
+
+.fm-workplace.is-found .fm-workplace-shape {
+    stroke: var(--text);
+    stroke-width: 0.2;
+}
+
+/* Editing aids */
+
+.fm-handle {
+    fill: var(--surface);
+    stroke: var(--fm-select);
+    stroke-width: 0.12;
+    cursor: crosshair;
+}
+
+.fm-draft {
+    pointer-events: none;
+}
+
+.fm-draft-shape {
+    fill: rgba(37, 99, 235, 0.08);
+    stroke: var(--fm-accent);
+    stroke-width: 0.12;
+    stroke-dasharray: 0.4 0.25;
+}
+
+.fm-draft-point {
+    fill: var(--fm-accent);
+}
+
+.fm-draft-start {
+    fill: var(--surface);
+    stroke: var(--fm-accent);
+    stroke-width: 0.15;
+}
+
+/* Tooltip and status */
+
+.fm-tooltip {
+    position: absolute;
+    z-index: 5;
+    max-width: 380px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #111827;
+    color: #f8fafc;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+.fm-tooltip[hidden] {
+    display: none;
+}
+
+.fm-tooltip-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.fm-tooltip .fm-details dt {
+    color: #94a3b8;
+}
+
+.fm-tooltip .fm-muted {
+    color: #94a3b8;
+}
+
+.fm-status {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: var(--ok-soft);
+    color: var(--ok-text);
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.fm-status.is-visible {
+    opacity: 1;
+}
+
+.fm-status.has-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--header-bg);
+    color: #ffffff;
+    pointer-events: auto;
+}
+
+.fm-status:not(.is-visible) {
+    pointer-events: none;
+}
+
+.fm-status-action {
+    padding: 2px 8px;
+    border: 1px solid light-dark(rgba(255, 255, 255, 0.5), rgba(56, 56, 56, 0.5));
+    border-radius: 4px;
+    background: transparent;
+    color: #ffffff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.fm-status-action:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.fm-status[data-kind="error"] {
+    background: var(--danger-soft);
+    color: var(--danger-text);
+}
+
+/* Side panel */
+
+.fm-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fm-panel-section {
+    padding: 12px 14px;
+    border: 1px solid var(--fm-border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.fm-panel-title {
+    margin: 0 0 10px;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.fm-hints {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.fm-muted {
+    margin: 6px 0 0;
+    color: var(--fm-muted);
+    font-size: 13px;
+}
+
+.fm-details {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 3px 10px;
+    margin: 0;
+    font-size: 13px;
+}
+
+.fm-details dt {
+    color: var(--fm-muted);
+}
+
+.fm-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* The IP and the Dante IP in the workplace tooltip start their group. */
+.fm-details .fm-row-spaced {
+    margin-top: 7px;
+}
+
+.fm-mono {
+    font-family: var(--font-mono);
+}
+
+.fm-note {
+    white-space: pre-line;
+}
+
+.fm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.fm-field-label {
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.fm-field input,
+.fm-field select,
+.fm-field textarea {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid var(--fm-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+}
+
+.fm-field input:focus,
+.fm-field textarea:focus {
+    border-color: var(--fm-accent);
+    outline: 2px solid rgba(37, 99, 235, 0.15);
+}
+
+.fm-field [aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.fm-field-error {
+    color: var(--danger-text);
+    font-size: 12px;
+}
+
+.fm-field-error[hidden] {
+    display: none;
+}
+
+.fm-field-hint {
+    color: var(--fm-muted);
+    font-size: 12px;
+}
+
+.fm-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.fm-danger {
+    margin-top: 6px;
+    padding: 6px 12px;
+    border: 1px solid light-dark(#fecaca, #612222);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--danger-text);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.fm-danger:hover {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+}
+
+.fm-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fm-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fm-legend-item:hover:not(:disabled) {
+    background: var(--surface-3);
+}
+
+.fm-legend-item:disabled {
+    cursor: default;
+}
+
+.fm-legend-name {
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
+.fm-legend-count {
+    color: var(--fm-muted);
+}
+
+.fm-swatch.fm-swatch-round {
+    border-radius: 50%;
+}
+
+.fm-legend-devices {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--fm-border);
+}
+
+.fm-swatch {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+.fm-empty {
+    color: var(--fm-muted);
+}
+
+@media (max-width: 900px) {
+    .fm-workspace {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fm-search {
+        margin-left: 0;
+    }
+}
+
+/* Switch port where the PC is seen (IP -> ARP -> FDB) */
+
+.fm-network-port {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+}
+
+.fm-network-port a {
+    color: var(--accent-text);
+}
+
+.fm-link {
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.fm-link-up {
+    background: var(--ok-soft);
+    color: var(--ok-text);
+}
+
+.fm-link-down {
+    background: var(--danger-soft);
+    color: var(--danger-text);
+}
+
+.fm-network-missing {
+    color: var(--warn-text);
+}
+
+.fm-muted-value {
+    color: var(--fm-muted);
+}
+
+.fm-network {
+    margin: 8px 0 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--fm-border);
+}
+
+.fm-tooltip .fm-network-missing {
+    color: #fbbf24;
+}
+
+.fm-tooltip .fm-muted-value {
+    color: #94a3b8;
+}
+
+
+/* Wall sockets */
+.fm-socket-ok {
+    color: var(--ok-text);
+}
+
+.fm-suggest {
+    display: block;
+    width: 100%;
+    margin: -4px 0 10px;
+    padding: 6px 10px;
+    border: 1px dashed light-dark(#93b4f5, #2d426d);
+    border-radius: 6px;
+    background: var(--surface-hover);
+    color: var(--accent-text);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.fm-suggest:hover {
+    background: var(--accent-soft);
+}

@@ -1,0 +1,366 @@
+/* ==========================================================
+   Rack Change only: the zoom buttons next to Front / Rear and the
+   layout on narrow screens. Loaded right after rack-view.css.
+   ========================================================== */
+
+/* ============================================================
+   Zoom buttons of the rack in Rack Change (next to Front / Rear).
+   ============================================================ */
+.rack-side-tabs {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.rack-change-zoom {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 12px;
+}
+
+.rack-change-zoom button {
+    min-width: 30px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.1;
+    cursor: pointer;
+}
+
+.rack-change-zoom button:hover {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+}
+
+.rack-change-zoom .rack-change-zoom-level {
+    min-width: 54px;
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* ============================================================
+   Rack Change on narrow screens (tablets and phones)
+   - The single column is as wide as the screen, not as the rack:
+     before, "1fr" grew to the rack's 972px, the whole page became
+     that wide and the centred button labels ended up off screen.
+   - The rack scrolls sideways inside its own box.
+   - On phones the room / rack pickers come first, then the rack,
+     then the forms for adding equipment.
+   ============================================================ */
+@media (max-width: 1050px) {
+    .rack-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rack-layout > .rack-main {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 720px) {
+    .rack-layout > .rack-sidebar {
+        display: contents;
+    }
+
+    .rack-sidebar > * {
+        order: 3;
+    }
+
+    .rack-sidebar > .rack-card:nth-child(-n/**/+2) {
+        order: 1;
+    }
+
+    .rack-layout > .rack-main {
+        order: 2;
+    }
+
+    .rack-sidebar > .rack-add-btn {
+        margin-bottom: 0;
+    }
+}
+
+
+/* "Port menu" switch in Rack Change: only on touch screens, where a port
+   menu cannot be opened with a right click. */
+.rack-port-menu-toggle {
+    display: none;
+    margin-left: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rack-port-menu-toggle.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .rack-port-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Finger-sized menu items. */
+    #port-context-menu > div {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+}
+
+/* While the switch is on, ports show that a tap opens a menu. */
+.rack-port-menu-mode .rack-port {
+    cursor: context-menu;
+    outline: 1px dashed light-dark(rgba(37, 99, 235, .55), rgba(37, 99, 235, 0.55));
+    outline-offset: 1px;
+}
+
+
+/* "Port menu" switch of an opened rack in Rack View (touch screens only)
+   and the small menu it opens. */
+.rv-port-menu-toggle {
+    display: none;
+    padding: 4px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rv-port-menu-toggle.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .rack-dashboard-card.is-expanded .rv-port-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 9px;
+    }
+}
+
+.rv-port-menu-mode .rack-dashboard-card.is-expanded .rack-port {
+    outline: 1px dashed light-dark(rgba(37, 99, 235, .6), rgba(37, 99, 235, 0.6));
+    outline-offset: 1px;
+}
+
+#rv-port-menu {
+    position: fixed;
+    z-index: 10001;
+    max-width: min(320px, calc(100vw - 16px));
+    padding: 10px 12px;
+    border: 1px solid #687684;
+    border-radius: 8px;
+    background: #111820;
+    color: #f8fafc;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+}
+
+#rv-port-menu[hidden] {
+    display: none;
+}
+
+.rv-port-menu-title {
+    margin-bottom: 4px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.rv-port-menu-line {
+    color: #cbd5e1;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.rv-port-menu-muted {
+    color: #94a3b8;
+}
+
+.rv-port-menu-action {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid light-dark(#a78bfa, #3c2a71);
+    border-radius: 6px;
+    background: #2e1065;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+@media (max-width: 720px) {
+    /* Zoom, Port menu, F / R and Close wrap instead of running off screen. */
+    .rack-dashboard-card.is-expanded .rack-dashboard-card-actions {
+        flex: 1 1 100%;
+        max-width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+}
+
+
+/* × on an empty board position: removes that position (custom board). */
+.rack-dashboard-slot {
+    position: relative;
+}
+
+.rack-dashboard-slot-remove {
+    position: absolute;
+    z-index: 2;
+    top: 6px;
+    right: 6px;
+    pointer-events: auto;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.rack-dashboard-slot-remove:hover {
+    border-color: var(--danger);
+    color: var(--danger-text);
+}
+
+.rack-dashboard-slot.is-occupied .rack-dashboard-slot-remove,
+.rack-dashboard-drag-active .rack-dashboard-slot-remove {
+    display: none;
+}
+
+
+/* Trunk cables card in Rack Change. */
+.rack-trunk-list {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rack-trunk-list li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.rack-trunk-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.rack-trunk-where {
+    display: block;
+    color: var(--text-muted);
+}
+
+
+/* Rack Change sidebar on wide screens: it sticks to the top while the long
+   rack scrolls, so it scrolls on its own when it is taller than the window
+   (otherwise its last cards were only reachable at the very end of the page). */
+@media (min-width: 1051px) {
+    .rack-layout > .rack-sidebar {
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 4px;
+    }
+}
+
+
+/* ---------- Drag a switch to another unit (js/rack_move.js) ---------- */
+
+#rack-change-root [data-move-url] > .rack-device-header {
+    cursor: grab;
+}
+
+/* Touch screens: a long press anywhere on the device picks it up (no system
+   menu, no text selection); a swipe still scrolls the page. */
+#rack-change-root [data-move-url] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* A finger is held on the header: the device is about to be picked up. */
+.rack-device.is-pressing {
+    outline: 2px solid #22c55e;
+    outline-offset: 2px;
+    transition: outline-color 0.4s;
+}
+
+body.rack-moving,
+body.rack-moving * {
+    cursor: grabbing !important;
+    user-select: none;
+}
+
+/* While dragging, ports and cable lines do not react (no hover highlight on the way). */
+body.rack-moving .rack-port,
+body.rack-moving .connection-hit,
+body.rack-moving .connection-path {
+    pointer-events: none;
+}
+
+.rack-device.is-moving {
+    opacity: 0.45;
+}
+
+.rack-row.rack-move-target {
+    background: rgba(34, 197, 94, 0.22);
+    box-shadow: inset 0 0 0 2px #22c55e;
+}
+
+.rack-row.rack-move-invalid {
+    background: rgba(239, 68, 68, 0.2);
+    box-shadow: inset 0 0 0 2px #ef4444;
+}
+
+.rack-move-ghost {
+    position: fixed;
+    z-index: 20000;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 6px 10px;
+    border-left: 4px solid #22c55e;
+    border-radius: 6px;
+    background: var(--header-bg);
+    color: #ffffff;
+    font-size: 13px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.rack-move-ghost.is-invalid {
+    border-left-color: #ef4444;
+}

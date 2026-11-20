@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{% if data and data.map %}{{ data.map.name }} · {% endif %}{{ _("Maps") }}{% endblock %}
+
+{# Floor Maps: schematic plans (Newsroom, АСБ, ...) with rooms and workplaces.
+   The editor is drawn by static/js/floor_maps.js from the JSON config below. #}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/floor_maps.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{% block content %}
+<div class="fm-page">
+    <div class="fm-header">
+        <h1>{{ _("Floor Maps") }}</h1>
+
+        <nav class="fm-tabs" aria-label="{{ _("Maps") }}">
+            {% for item in maps %}
+            <a class="fm-tab{% if data and item.id == data.map.id %} is-active{% endif %}"
+               href="{{ url_for('floor_maps.view', map_id=item.id) }}"
+               data-map-id="{{ item.id }}" {% if can_edit %}draggable="true" title="{{ _("Drag to change the order of maps") }}"{% endif %}>
+                {{ item.name }}
+                <span class="fm-tab-count">{{ item.workplace_count }}</span>
+            </a>
+            {% endfor %}
+            <button type="button" class="fm-tab fm-tab-new" data-fm-new-map data-requires-login>{{ _("+ New map") }}</button>
+        </nav>
+    </div>
+
+    {% if data %}
+    <div class="fm-toolbar">
+        {% if can_edit %}
+        <div class="fm-mode" role="group" aria-label="{{ _("Mode") }}">
+            <button type="button" class="fm-mode-button" data-fm-mode="view">{{ _("View") }}</button>
+            <button type="button" class="fm-mode-button" data-fm-mode="edit" data-requires-login>{{ _("Edit") }}</button>
+        </div>
+        {% endif %}
+
+        <div class="fm-tools" role="group" aria-label="{{ _("Tools") }}" data-fm-edit-only>
+            <button type="button" class="fm-tool" data-fm-tool="select" title="{{ _("Select and move (V)") }}">{{ _("Select") }}</button>
+            <button type="button" class="fm-tool" data-fm-tool="room" title="{{ _("Draw a room (R)") }}">{{ _("Room") }}</button>
+            <button type="button" class="fm-tool" data-fm-tool="area" title="{{ _("Draw a work area: see-through, dashed border (A)") }}">{{ _("Area") }}</button>
+            <button type="button" class="fm-tool" data-fm-tool="workplace" title="{{ _("Place a PC workplace (W)") }}">{{ _("Workplace") }}</button>
+            <button type="button" class="fm-tool" data-fm-tool="phone" title="{{ _("Place a phone (P)") }}">{{ _("Phone") }}</button>
+            <button type="button" class="fm-tool" data-fm-tool="wifi" title="{{ _("Place a Wi-Fi access point (F)") }}">{{ _("Wi-Fi") }}</button>
+            <button type="button" class="fm-tool fm-tool-settings" data-fm-settings title="{{ _("Map name, size, delete") }}">{{ _("Map settings") }}</button>
+        </div>
+
+        <div class="fm-zoom" role="group" aria-label="{{ _("Zoom") }}">
+            <button type="button" class="fm-tool" data-fm-zoom="out" title="{{ _("Zoom out (−)") }}" aria-label="{{ _("Zoom out") }}">−</button>
+            <button type="button" class="fm-tool fm-zoom-level" data-fm-zoom="reset" title="{{ _("Back to 100% (0)") }}">100%</button>
+            <button type="button" class="fm-tool" data-fm-zoom="in" title="{{ _("Zoom in (+)") }}" aria-label="{{ _("Zoom in") }}">+</button>
+            <button type="button" class="fm-tool" data-fm-zoom="fit" title="{{ _("Show the whole map") }}">{{ _("Fit") }}</button>
+        </div>
+
+        <label class="fm-search">
+            <span class="fm-visually-hidden">{{ _("Find workplace") }}</span>
+            <input type="search" placeholder="{{ _("Find PC, IP or role…") }}" data-fm-search autocomplete="off">
+            <span class="fm-search-count" data-fm-search-count></span>
+        </label>
+    </div>
+
+    <div class="fm-workspace">
+        <div class="fm-canvas" data-fm-canvas>
+            <div class="fm-viewport" data-fm-viewport>
+                <svg class="fm-svg" data-fm-svg xmlns="http://www.w3.org/2000/svg" role="img"
+                     aria-label="{{ _("{name} floor map", name=data.map.name) }}"></svg>
+            </div>
+            <div class="fm-tooltip" data-fm-tooltip hidden></div>
+            <div class="fm-status" data-fm-status aria-live="polite"></div>
+        </div>
+        <aside class="fm-panel" data-fm-panel></aside>
+    </div>
+
+    <script type="application/json" id="floor-map-data">{{ data | tojson }}</script>
+    {% else %}
+    <p class="fm-empty">{{ _("No maps yet. Create one with") }} <strong>{{ _("+ New map") }}</strong>.</p>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/floor_maps.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}

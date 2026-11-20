@@ -1,0 +1,845 @@
+* {
+    box-sizing: border-box;
+}
+
+/* Form fields take the theme's surface and text (no specificity: any page
+   rule that styles its fields wins). */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="submit"], [type="button"]), select, textarea) {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+/* Numbers and times line up in columns (digits of the same width). */
+.num,
+time {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Keyboard focus is always visible (mouse clicks show nothing). */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    line-height: 1.4;
+
+    background: var(--bg);
+
+    color: var(--text);
+}
+
+
+/* Every page uses the same workspace: a 1400px column centred on the screen
+   with 24px side gutters (12px on phones). Header and main share it,
+   Rack View and Floor Maps included. */
+.header-inner {
+    max-width: 1400px;
+
+    margin: auto;
+
+    padding: 16px 24px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+
+.logo {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    font-size: 21px;
+
+    font-weight: bold;
+
+    color: white;
+
+    text-decoration: none;
+}
+
+
+.logo-mark {
+    flex: 0 0 auto;
+
+    display: block;
+}
+
+
+/* The ☰ button: phones only (see the Mobile section). */
+.nav-burger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.nav-burger .nav-burger-close,
+header.nav-open .nav-burger .nav-burger-open {
+    display: none;
+}
+
+header.nav-open .nav-burger .nav-burger-close {
+    display: inline;
+}
+
+.logo:hover {
+    color: #dbe4f0;
+}
+
+
+nav {
+    display: flex;
+
+    gap: 20px;
+}
+
+
+nav a {
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 15px;
+}
+
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+
+/* ============================================================
+   Main menu: Switches ▾  Racks ▾  Maps
+   ============================================================ */
+
+/* The header stays at the top of the window while the page scrolls: the
+   menu, the language, the theme and sign-in are always at hand. Overlays
+   (opened rack, cable path) have the same z-index and come later in the
+   page, so they still cover it. --header-height is measured by js/nav.js. */
+header {
+    background: var(--header-bg);
+    color: white;
+    border-bottom: 1px solid var(--header-edge);
+    box-shadow: var(--header-shadow);
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10000;
+}
+
+/* Phones enlarge "too small" text on their own (Chrome font boosting,
+   iOS text-size-adjust). In the scaled-down racks this made labels bigger
+   than their boxes, so they overlapped or were cut off.
+   Jumps to #anchors and scrollIntoView stop below the header, not under it. */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--header-height, 64px) + 12px);
+}
+
+.main-nav {
+    display: flex;
+
+    align-items: center;
+
+    gap: 4px;
+}
+
+.main-nav .nav-group {
+    position: relative;
+}
+
+.main-nav .nav-top {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 7px 12px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    background: transparent;
+
+    color: white;
+
+    font: inherit;
+
+    font-size: 15px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.main-nav .nav-top:hover,
+.main-nav .nav-group.open > .nav-top {
+    background: rgba(255, 255, 255, 0.12);
+
+    text-decoration: none;
+}
+
+.main-nav .nav-group.is-active > .nav-top,
+.main-nav .nav-top.is-active {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.main-nav .nav-caret {
+    font-size: 11px;
+
+    opacity: 0.8;
+}
+
+/* The list hangs under its title; padding-top bridges the gap so the
+   pointer can move down without the list closing. */
+.main-nav .nav-menu {
+    display: none;
+
+    position: absolute;
+
+    top: 100%;
+
+    right: 0;
+
+    min-width: 250px;
+
+    padding-top: 6px;
+}
+
+.main-nav .nav-menu::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 6px 0 0 0;
+
+    background: var(--surface);
+
+    border-radius: 8px;
+
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.22);
+}
+
+.main-nav .nav-menu a {
+    position: relative;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    margin: 4px;
+
+    padding: 8px 12px;
+
+    border-radius: 6px;
+
+    color: var(--text);
+
+    text-decoration: none;
+}
+
+.main-nav .nav-menu a b {
+    font-size: 14px;
+}
+
+.main-nav .nav-menu a span {
+    font-size: 12px;
+
+    color: var(--text-muted);
+}
+
+.main-nav .nav-menu a:hover,
+.main-nav .nav-menu a:focus-visible {
+    background: var(--surface-hover);
+
+    text-decoration: none;
+}
+
+.main-nav .nav-menu a.is-current {
+    background: var(--accent-soft);
+}
+
+.main-nav .nav-menu a.is-current b {
+    color: var(--accent-text);
+}
+
+.main-nav .nav-group.open .nav-menu,
+.main-nav .nav-group:focus-within .nav-menu {
+    display: block;
+}
+
+@media (hover: hover) {
+    .main-nav .nav-group:hover .nav-menu {
+        display: block;
+    }
+
+    /* Switches / Racks are titles of their lists, not links. */
+    .main-nav .nav-group > .nav-top {
+        cursor: default;
+    }
+}
+
+
+/* Language switcher: УКР | EN */
+.lang-switch {
+    display: inline-flex;
+
+    margin-left: 10px;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    border-radius: 6px;
+
+    overflow: hidden;
+}
+
+.lang-switch a {
+    padding: 4px 8px;
+
+    color: rgba(255, 255, 255, 0.75);
+
+    font-size: 12px;
+
+    text-decoration: none;
+}
+
+.lang-switch a:hover {
+    color: #ffffff;
+
+    text-decoration: none;
+}
+
+.lang-switch a.is-current {
+    background: rgba(255, 255, 255, 0.18);
+
+    color: #ffffff;
+
+    font-weight: bold;
+}
+
+
+/* Table rows that open a page (data-href + js/row_links.js). */
+tr.row-link {
+    cursor: pointer;
+}
+
+tr.row-link:hover > td {
+    background: var(--surface-hover);
+}
+
+tr.row-link .row-link-main {
+    color: inherit;
+
+    text-decoration: none;
+}
+
+tr.row-link:hover .row-link-main strong {
+    color: var(--accent-text);
+}
+
+
+main {
+    max-width: 1400px;
+
+    margin: auto;
+
+    padding: 30px 24px;
+}
+
+
+/* ============================================================
+   Headings
+   ============================================================ */
+
+h1 {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+
+h2 {
+    margin-top: 35px;
+}
+
+
+.subtitle {
+    color: var(--text-muted);
+
+    font-size: 14px;
+}
+
+
+.page-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 25px;
+}
+
+
+/* ============================================================
+   Stat tiles (home, Overview, Check): a label, a big number, a note.
+   A coloured bar on the left tells the state: .is-good / .is-warn /
+   .is-bad / .is-info; a tile that is a link lifts on hover.
+   ============================================================ */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0 0 22px;
+}
+
+.stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 14px 16px 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.stat::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--stat-accent, transparent);
+}
+
+.stat.is-good { --stat-accent: var(--ok); }
+.stat.is-warn { --stat-accent: var(--warn); }
+.stat.is-bad { --stat-accent: var(--danger); }
+.stat.is-info { --stat-accent: var(--info); }
+
+a.stat:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-label {
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-note {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    text-wrap: balance;
+}
+
+@media (max-width: 700px) {
+    .stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat {
+        padding: 10px 12px 10px 14px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+}
+
+/* A plain white box (forms, panels). */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.up {
+    color: var(--ok-text);
+}
+
+.down {
+    color: var(--danger-text);
+}
+
+
+/* ============================================================
+   Tables
+   ============================================================ */
+
+.table-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    overflow-x: auto;
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+
+thead {
+    background: var(--surface-2);
+}
+
+th {
+    text-align: left;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+
+    padding: 12px;
+
+    white-space: nowrap;
+}
+
+
+td {
+    padding: 11px 12px;
+
+    border-top:
+        1px solid var(--border-subtle);
+
+    white-space: nowrap;
+}
+
+
+tbody tr:hover {
+    background: var(--surface-2);
+}
+
+
+.mac {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+
+    letter-spacing: 0.3px;
+}
+
+
+.interface {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+}
+
+
+/* ============================================================
+   Status
+   ============================================================ */
+
+.status {
+    font-weight: bold;
+}
+
+
+.status.up {
+    color: var(--ok-text);
+}
+
+
+.status.down {
+    color: var(--danger-text);
+}
+
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+/* One primary action per block (.button); the others are .button.secondary
+   (outlined, quiet). */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--accent);
+    color: var(--on-accent);
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--fs-base);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.button:hover {
+    background: var(--accent-hover);
+}
+
+.button.secondary {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-2);
+}
+
+.button.secondary:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+    color: var(--text);
+}
+
+
+/* ============================================================
+   Search
+   ============================================================ */
+
+.search {
+    display: flex;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+
+.search input {
+    flex: 1;
+    max-width: 500px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-base);
+}
+
+
+.search input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+
+
+/* ============================================================
+   Result count
+   ============================================================ */
+
+.result-count {
+    margin-top: 15px;
+
+    color: var(--text-muted);
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
+@media (
+    max-width: 700px
+) {
+
+
+    main {
+        padding: 20px 12px;
+    }
+
+
+    /* One row: the logo and the ☰ button; the menu, the language, the
+       theme and sign-in open as a panel under it (js/nav.js). */
+    .header-inner {
+        flex-wrap: wrap;
+        gap: 0;
+        padding: 8px 12px;
+    }
+
+    .logo {
+        font-size: 19px;
+    }
+
+    .nav-burger {
+        display: inline-flex;
+    }
+
+    .main-nav {
+                display: none;
+        flex: 1 0 100%;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 8px;
+        max-height: calc(100vh - 56px);
+        margin: 8px -12px 0;
+        padding: 8px 12px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        overflow-y: auto;
+    }
+
+    header.nav-open .main-nav {
+        display: flex;
+    }
+
+    /* The lists are always open in the panel: a title, then its pages. */
+    .main-nav .nav-group > .nav-top {
+        width: 100%;
+        padding: 10px 4px 4px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+
+    .main-nav .nav-group > .nav-top,
+    .main-nav .nav-group.is-active > .nav-top {
+        background: transparent;
+    }
+
+    .main-nav .nav-caret {
+        display: none;
+    }
+
+    .main-nav .nav-menu,
+    .main-nav .nav-group:focus-within .nav-menu {
+        display: block;
+        position: static;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .main-nav .nav-menu::before {
+        display: none;
+    }
+
+    .main-nav .nav-menu a {
+        margin: 0;
+        padding: 9px 10px;
+        color: #ffffff;
+    }
+
+    .main-nav .nav-menu a span {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .main-nav .nav-menu a:hover,
+    .main-nav .nav-menu a:focus-visible,
+    .main-nav .nav-menu a.is-current {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-nav .nav-menu a.is-current b {
+        color: #ffffff;
+    }
+
+        .main-nav .nav-group,
+    .main-nav > .nav-link {
+        flex: 1 0 100%;
+    }
+
+    .main-nav > .nav-link {
+        margin-top: 6px;
+        padding: 10px;
+        font-weight: 600;
+    }
+
+    /* Language, theme and sign-in on one row at the bottom. */
+        .main-nav .lang-switch,
+    .main-nav .theme-toggle,
+    .main-nav .auth-box {
+        margin: 12px 0 0;
+    }
+
+
+    .page-header {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+
+    .search {
+        flex-wrap: wrap;
+    }
+
+
+    .search input {
+        min-width: 100%;
+    }
+
+}
+
+
+/* Wide tables scroll sideways inside their box instead of widening the page;
+   the box frames the table like .table-container. */
+.table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+/* A device name taken from our documentation (DNS has none): italic, dotted. */
+.doc-name {
+    font-style: italic;
+    color: light-dark(#3f5f8a, #9db6d8);
+    border-bottom: 1px dotted light-dark(#9fb3cf, #444f5f);
+    cursor: help;
+}

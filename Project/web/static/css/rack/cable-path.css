@@ -1,0 +1,218 @@
+/* Cable path modal (js/cable_path.js). */
+
+.cable-path-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 6vh 16px 16px;
+    background: rgba(15, 23, 42, 0.55);
+    overflow-y: auto;
+}
+
+.cable-path-backdrop[hidden] {
+    display: none;
+}
+
+.cable-path-dialog {
+    width: min(640px, 100%);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+.cable-path-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--header-bg);
+    color: #ffffff;
+}
+
+.cable-path-header h2 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.cable-path-close {
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.cable-path-close:hover,
+.cable-path-close:focus-visible {
+    color: #ffffff;
+}
+
+.cable-path-content {
+    padding: 16px 18px 20px;
+}
+
+.cable-path-loading {
+    color: var(--text-muted);
+}
+
+.cable-path-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 14px;
+}
+
+.cable-path-status {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.is-complete .cable-path-status {
+    background: var(--ok-soft);
+    color: var(--ok-text);
+}
+
+.is-open .cable-path-status {
+    background: var(--warn-soft);
+    color: var(--warn-text);
+}
+
+.cable-path-summary-text {
+    font-weight: bold;
+}
+
+.cable-path-summary-meta {
+    flex-basis: 100%;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.cable-path-room {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px 12px;
+    background: var(--surface-2);
+}
+
+.cable-path-room-name {
+    margin-bottom: 8px;
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.cable-path-node {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+.cable-path-node-odf {
+    border-left-color: light-dark(#a78bfa, #3c2a71);
+}
+
+.cable-path-node-switch,
+.cable-path-node-server {
+    border-left-color: #4f80ff;
+}
+
+.cable-path-node.is-start {
+    box-shadow: 0 0 0 2px #00b8d9;
+}
+
+.cable-path-node-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+}
+
+.cable-path-badge {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.cable-path-node-name {
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.cable-path-node-port {
+    color: var(--accent-text);
+    font-weight: bold;
+}
+
+.cable-path-here {
+    margin-left: auto;
+    color: light-dark(#0e7490, #8ddff5);
+    font-size: 12px;
+}
+
+.cable-path-node-meta,
+.cable-path-node-note {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.cable-path-node-note {
+    font-style: italic;
+}
+
+.cable-path-cord,
+.cable-path-trunk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    font-size: 12px;
+}
+
+/* Patch cord inside a room: short vertical line. */
+.cable-path-cord {
+    margin: 0 0 0 18px;
+    padding: 8px 0 8px 14px;
+    border-left: 3px solid var(--border-strong);
+    color: var(--text-2);
+}
+
+.cable-path-cord-fiber {
+    border-left-color: light-dark(#a78bfa, #3c2a71);
+}
+
+/* Trunk between rooms: dashed fibre line. */
+.cable-path-trunk {
+    margin: 0 0 0 18px;
+    padding: 12px 0 12px 14px;
+    border-left: 3px dashed #7c3aed;
+    color: light-dark(#5b21b6, #ad85ec);
+}
+
+.cable-path-link-kind {
+    font-weight: bold;
+}
+
+.cable-path-end {
+    margin: 10px 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--warn-soft);
+    color: var(--warn-text);
+    font-size: 13px;
+}

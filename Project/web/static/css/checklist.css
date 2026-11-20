@@ -1,0 +1,445 @@
+/* Cable checklist (templates/checklist.html). */
+
+.cl-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 22px;
+    margin: 0 0 14px;
+    font-size: 14px;
+}
+
+.cl-progress {
+    flex: 1 1 240px;
+    max-width: 420px;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--surface-3);
+    overflow: hidden;
+}
+
+.cl-progress-bar {
+    height: 100%;
+    background: var(--ok);
+}
+
+.cl-changed b {
+    color: var(--warn-text);
+}
+
+.cl-work b {
+    color: var(--danger-text);
+}
+
+/* Every switch with its share of confirmed ports. */
+.cl-switches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 6px;
+    margin: 0 0 14px;
+}
+
+.cl-switch-chip {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.cl-switch-chip:hover {
+    border-color: var(--border-strong);
+}
+
+.cl-switch-chip.is-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+.cl-chip-name {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cl-chip-percent {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.cl-switch-chip.is-started .cl-chip-percent {
+    color: var(--warn-text);
+}
+
+.cl-switch-chip.is-done .cl-chip-percent {
+    color: var(--ok-text);
+}
+
+.cl-chip-bar {
+    grid-column: 1 / -1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
+    overflow: hidden;
+}
+
+.cl-chip-bar span {
+    display: block;
+    height: 100%;
+    background: var(--ok);
+}
+
+.cl-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0 0 12px;
+}
+
+.cl-filters select,
+.cl-filters input[type="search"] {
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+    background: var(--surface);
+    color: inherit;
+}
+
+.cl-filters input[type="search"] {
+    flex: 1 1 220px;
+    max-width: 340px;
+}
+
+.cl-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.cl-shown {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.cl-table td {
+    vertical-align: top;
+    white-space: normal;
+    /* Rows are tinted by their state: the line between them must hold. */
+    border-top-color: var(--border);
+}
+
+.cl-table .cl-nowrap {
+    white-space: nowrap;
+}
+
+.cl-switch {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cl-port {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.cl-sub {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    white-space: normal;
+}
+
+.cl-cable {
+    min-width: 180px;
+    max-width: 320px;
+}
+
+.cl-device {
+    min-width: 170px;
+    max-width: 260px;
+    overflow-wrap: break-word;
+}
+
+/* Rows: confirmed green, changed amber, needs work red on the left. */
+.cl-row.cl-confirmed td {
+    background: var(--ok-soft);
+}
+
+.cl-row.cl-changed td {
+    background: var(--warn-soft);
+}
+
+.cl-row.cl-mismatch td {
+    background: var(--danger-soft);
+}
+
+/* One header per switch: name, place, progress. */
+.cl-table tr.cl-group td {
+    padding-top: 14px;
+    padding-bottom: 6px;
+    border-top: 2px solid var(--border);
+    background: var(--surface-3);
+    font-size: 14px;
+}
+
+.cl-group-progress {
+    float: right;
+    color: var(--ok-text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cl-wrong {
+    display: block;
+    margin-top: 4px;
+    padding: 3px 8px;
+    border: 1px solid light-dark(#fca5a5, #6a2727);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--danger-text);
+    font: inherit;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.cl-wrong[aria-pressed="true"] {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.cl-actual {
+    margin-top: 4px;
+    color: var(--danger-text);
+    font-size: 12px;
+    white-space: normal;
+}
+
+.cl-actual a {
+    font-weight: 600;
+}
+
+.cl-label-count b {
+    color: var(--ok-text);
+}
+
+.cl-mismatch-count b,
+.cl-nolabel-count b {
+    color: var(--danger-text);
+}
+
+/* The sticker on the cable: there (green) / missing (red). */
+.cl-label {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.cl-label button {
+    padding: 3px 7px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font: inherit;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.cl-label .cl-label-yes[aria-pressed="true"] {
+    border-color: var(--ok);
+    background: var(--ok);
+    color: #ffffff;
+}
+
+.cl-label .cl-label-no[aria-pressed="true"] {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.cl-row.cl-has-work td:first-child {
+    box-shadow: inset 4px 0 0 #dc2626;
+}
+
+.cl-row.cl-saving {
+    opacity: 0.6;
+}
+
+.cl-confirm,
+.cl-mark {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.cl-confirm:hover,
+.cl-mark:hover {
+    border-color: var(--border-strong);
+}
+
+.cl-confirm .cl-confirm-on,
+.cl-confirm[aria-pressed="true"] .cl-confirm-off {
+    display: none;
+}
+
+.cl-confirm[aria-pressed="true"] .cl-confirm-on {
+    display: inline;
+}
+
+.cl-confirm[aria-pressed="true"] {
+    border-color: var(--ok);
+    background: var(--ok);
+    color: #ffffff;
+}
+
+.cl-marks {
+    white-space: nowrap;
+}
+
+.cl-mark + .cl-mark {
+    margin-left: 4px;
+}
+
+.cl-mark[aria-pressed="true"] {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.cl-warn {
+    color: var(--warn-text);
+    font-weight: 600;
+}
+
+.cl-note {
+    width: 100%;
+    min-width: 140px;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    background: var(--surface);
+    color: inherit;
+}
+
+/* Phone: the button columns (Checked, Cable) come right after the port, so
+   they are at hand without scrolling sideways (the switch is in the group header).
+   The rows become flex rows (cells keep fixed widths, header and body alike);
+   the table still scrolls sideways in its box for the other columns. */
+@media (max-width: 720px) {
+    .cl-switches {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cl-table {
+        width: max-content;
+    }
+
+    .cl-table tr {
+        display: flex;
+    }
+
+    .cl-table tr[hidden] {
+        display: none;
+    }
+
+    /* The switch header is one cell across the row. */
+    .cl-table tr.cl-group td {
+        order: 0;
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .cl-group-progress {
+        float: none;
+        display: block;
+    }
+
+    .cl-table :is(th, td):nth-child(1) { order: 1; width: 104px; }
+    .cl-table :is(th, td):nth-child(5) { order: 2; width: 128px; }
+    .cl-table :is(th, td):nth-child(6) { order: 3; width: 112px; }
+    .cl-table :is(th, td):nth-child(2) { order: 4; width: 84px; }
+    .cl-table :is(th, td):nth-child(3) { order: 5; width: 190px; }
+    .cl-table :is(th, td):nth-child(4) { order: 6; width: 170px; }
+    .cl-table :is(th, td):nth-child(7) { order: 7; width: 170px; }
+
+    .cl-switch,
+    .cl-port {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    /* The buttons fill their cells and may take two lines; the two cable
+       marks one under the other. */
+    .cl-confirm,
+    .cl-wrong,
+    .cl-marks .cl-mark {
+        display: block;
+        width: 100%;
+        padding: 5px 4px;
+        font-size: 12px;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    /* The first three columns fit a phone screen (366px between the gutters). */
+    .cl-table th {
+        font-size: 12px;
+    }
+
+    .cl-switch,
+    .cl-port,
+    .cl-sub {
+        font-size: 11px;
+    }
+
+    .cl-table th,
+    .cl-table td {
+        flex: 0 0 auto;
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: none;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
+    .cl-mark + .cl-mark {
+        margin: 4px 0 0;
+    }
+
+    .cl-label {
+        flex-direction: column;
+    }
+
+    .cl-label button {
+        width: 100%;
+        white-space: normal;
+        line-height: 1.2;
+    }
+}

@@ -1,0 +1,80 @@
+{% macro render_rack(rack, rack_rows, connections, current_side, editable=False, component_id='', show_title=True, show_legend=True) -%}
+    {% set shell_id = 'rack-visual-shell' if not component_id else 'rack-visual-shell-' ~ component_id %}
+    {% set svg_id = 'rack-connections-svg' if not component_id else 'rack-connections-svg-' ~ component_id %}
+
+    <div
+        id="{{ shell_id }}"
+        class="rack-visual-shell{% if not show_title %} rack-component-no-title{% endif %}"
+        data-rack-component="1"
+        data-rack-id="{{ rack.id }}"
+        data-rack-side="{{ current_side }}"
+        data-component-id="{{ component_id }}"
+        {%- if rack.width_percent and rack.width_percent < 100 %}
+        data-rack-width="{{ rack.width_percent }}" style="--rack-width: {{ rack.width_percent / 100 }};"
+        {%- endif %}
+    >
+        <svg id="{{ svg_id }}" class="rack-connections-svg" aria-hidden="true"></svg>
+
+        <div class="rack-frame">
+            {% if show_title %}
+                <div class="rack-title-strip">
+                    <span>
+                        {{ rack.server_room_name }} · {{ rack.name }}
+                        <span class="rack-side-label">{{ _('Rear') if current_side == 'rear' else _('Front') }}</span>
+                    </span>
+                    <span class="rack-location">
+                        {{ rack.units }}U · {{ _n("{n} connection", "{n} connections", connections|length) }}
+                    </span>
+                </div>
+            {% endif %}
+
+            {% if show_legend %}
+                <div class="rack-legend">
+                    <span><span class="legend-dot legend-up"></span>{{ _("Switch port UP") }}</span>
+                    <span><span class="legend-dot legend-down"></span>{{ _("Switch port DOWN") }}</span>
+                    <span title="{{ _("Down and nothing expected on it") }}"><span class="legend-dot legend-idle"></span>{{ _("Free switch port") }}</span>
+                    <span><span class="legend-dot legend-ethernet"></span>{{ _("Ethernet link") }}</span>
+                    <span><span class="legend-dot legend-fiber"></span>{{ _("ODF / Fiber link") }}</span>
+                    <span><span class="legend-dot legend-sdi"></span>{{ _("SDI link") }}</span>
+                    {% if editable %}
+                        <span><span class="legend-dot legend-selected"></span>{{ _("Selected") }}</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% for rack_row in rack_rows %}
+                {# data-unit / data-device: which device holds this U (js/rack_move.js checks a drop place). #}
+                {% set d = rack_row.device %}
+                <div class="rack-row" data-unit="{{ rack_row.unit }}"{% if d %} data-device="{{ d.type }}-{{ d.data.switch_id if d.type == 'switch' else d.data.id }}"{% endif %}>
+                    <div class="rack-u">U{{ rack_row.unit }}</div>
+                    <div class="rack-slot">
+                        {% if not rack_row.device %}
+                            <div class="rack-empty-slot"></div>
+
+                        {% elif rack_row.device.type == 'switch' %}
+                            {% set sw = rack_row.device.data %}
+
+                            {% if sw.rack_port_layout == 'cisco_4900m' %}
+                                {% include "rack/_switch_4900m.html" %}
+                            {% else %}
+                                {% include "rack/_switch_standard.html" %}
+                            {% endif %}
+
+                        {% elif rack_row.device.type == 'switch_placeholder' %}
+                            {% include "rack/_switch_placeholder.html" %}
+
+                        {% elif rack_row.device.type == 'server' %}
+                            {% include "rack/_server.html" %}
+
+                        {% elif rack_row.device.type == 'patch_panel' %}
+                            {% include "rack/_patch_panel.html" %}
+
+                        {% elif rack_row.device.type == 'cable_organizer' %}
+                            {% include "rack/_cable_organizer.html" %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{%- endmacro %}

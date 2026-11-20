@@ -1,0 +1,322 @@
+/* ========================================================
+   Switch identity
+   ======================================================== */
+
+.switch-title-block {
+    margin-bottom: 8px;
+}
+
+.switch-title-block h1 {
+    margin: 0 0 6px 0;
+}
+
+.switch-device-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 24px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.switch-device-info strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* ========================================================
+   Port details search
+   ======================================================== */
+
+.port-details-header {
+    margin-top: 34px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 14px 0;
+}
+
+.search-input {
+    width: 420px;
+    max-width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    font-size: 14px;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #6d9ff5;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+/* ========================================================
+   Port details table
+   Restores visible cell/table borders independently of
+   the global style.css.
+   ======================================================== */
+
+.port-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+        background: var(--surface);
+}
+
+.port-details-table th,
+.port-details-table td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid var(--border);
+}
+
+/* The box around (.table-wrapper) is the outer frame: no second one. */
+.port-details-table tr > :first-child {
+    border-left: 0;
+}
+
+.port-details-table tr > :last-child {
+    border-right: 0;
+}
+
+.port-details-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.port-details-table thead th {
+    border-top: 0;
+    background: var(--surface-3);
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.port-details-table tbody tr:hover {
+    background: var(--surface-2);
+}
+
+.port-details-table td.mac,
+.port-details-table td.ip-address {
+    font-family: inherit;
+}
+
+.port-details-table td.neighbor {
+    font-size: 12px;
+    color: var(--text-2);
+}
+
+/* Cells do not wrap by default (base.css); the text columns of the port
+   table do, so the table fits its box instead of pushing MAC and Interface
+   off to the right. */
+.port-details-table td:nth-child(2),
+.port-details-table td.neighbor {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 90px;
+}
+
+/* Hostnames: a whole name per line where possible. */
+.port-details-table td.hostname-cell {
+    white-space: normal;
+    overflow-wrap: break-word;
+    min-width: 200px;
+}
+
+/* ========================================================
+   Status badges
+   ======================================================== */
+
+.status-badge {
+    display: inline-block;
+    min-width: 46px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.status-up {
+    background: var(--ok-soft);
+    color: light-dark(#147a4b, #97f0c7);
+}
+
+.status-down {
+    background: var(--danger-soft);
+    color: var(--danger-text);
+}
+
+.status-unknown {
+    background: var(--surface-3);
+    color: var(--text-muted);
+}
+
+/* ========================================================
+   Many MACs / Many IPs
+   ======================================================== */
+
+.many-macs,
+.many-ips {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: help;
+}
+
+.many-macs {
+    background: #6c757d;
+}
+
+.many-ips {
+    background: var(--accent);
+}
+
+/* ========================================================
+   Cisco Catalyst 4900M physical layout: NH-SW100 / NH-SW101
+   ======================================================== */
+
+.c4900m-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: max-content;
+}
+
+.c4900m-expansion-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.c4900m-module,
+.c4900m-fixed-module {
+    padding: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.c4900m-module-title {
+    margin: 0 0 7px 2px;
+    color: #d7dde3;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.c4900m-module-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 94px);
+    gap: 6px;
+}
+
+.c4900m-fixed-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 94px);
+    gap: 6px;
+}
+
+.c4900m-slot {
+    min-height: 50px;
+    padding: 4px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.c4900m-slot-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.c4900m-slot .compact-port {
+    margin: 0;
+}
+
+.c4900m-slot .c4900m-te-port {
+    width: 84px;
+    min-width: 84px;
+}
+
+.c4900m-slot .c4900m-gig-port {
+    width: 40px;
+    min-width: 40px;
+}
+
+.c4900m-slot .compact-port-number,
+.c4900m-fixed-grid .compact-port-number {
+    font-size: 10px;
+    letter-spacing: -0.02em;
+}
+
+.c4900m-fixed-grid .compact-port {
+    width: 94px;
+    min-width: 94px;
+    margin: 0;
+}
+
+.c4900m-alt-label {
+    margin-top: 3px;
+    min-height: 11px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 9px;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.c4900m-empty-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 40px;
+    color: var(--text-muted);
+    font-size: 11px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+}
+
+@media (max-width: 1050px) {
+    .c4900m-expansion-row {
+        flex-direction: column;
+    }
+
+    .c4900m-fixed-grid {
+        grid-template-columns: repeat(4, 94px);
+    }
+}
+
+@media (max-width: 700px) {
+    .search-form {
+        flex-wrap: wrap;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+}
+
+
+.switch-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

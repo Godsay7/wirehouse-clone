@@ -1,0 +1,93 @@
+{# Cisco Catalyst 4900M (2U): expansion modules 2-3 and fixed Te1/1-8. Uses: sw, editable, rack, current_side. #}
+{% if sw.is_primary %}
+    <div
+        class="rack-device switch-device c4900m-rack-device"
+        style="--rack-device-units: {{ sw.height_units }};"{% if editable %} data-move-url="{{ url_for('equipment.move_switch', rack_id=rack.id, switch_id=sw.switch_id) }}" data-move-key="switch-{{ sw.switch_id }}" data-move-top="{{ sw.rack_unit }}" data-move-height="{{ sw.height_units }}" data-move-name="{{ sw.host }}"{% endif %}
+    >
+        <div class="rack-device-header c4900m-rack-header">
+            <div>
+                <div class="rack-device-name">{{ sw.host }}</div>
+                <div class="rack-device-meta">
+                    Cisco Catalyst 4900M · {{ sw.height_units }}U
+                </div>
+            </div>
+
+            {% if editable %}
+                <form
+                    class="rack-remove-form"
+                    method="post"
+                    action="{{ url_for('equipment.remove_switch', rack_id=rack.id, switch_id=sw.switch_id, side=current_side) }}"
+                    hx-confirm="{{ _("Remove this switch from the rack?") }}"
+                >
+                    <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <div class="c4900m-rack-panel">
+            <div class="c4900m-rack-expansion-row">
+                {% for module in sw.cisco_4900m_panel.modules %}
+                    <div class="c4900m-rack-module">
+                        <div class="c4900m-rack-module-title">{{ _("Module") }} {{ module.module }}</div>
+                        <div class="c4900m-rack-module-grid">
+                            {% for slot in module.slots %}
+                                <div class="c4900m-rack-slot">
+                                    {% if slot.mode == 'gigabit' %}
+                                        {% for port in slot.display_ports %}
+                                            {% set link_class = 'link-up' if port.link == 'UP' else (('link-down' if port.expected else 'link-idle') if port.link == 'DOWN' else 'link-unknown') %}
+                                            <div
+                                                id="switch-{{ sw.switch_id }}-port-{{ port.port }}"
+                                                class="rack-port switch-port c4900m-rack-port c4900m-rack-port-gig {{ link_class }}"
+                                                data-endpoint-type="switch"
+                                                data-switch-id="{{ sw.switch_id }}"
+                                                data-switch-port="{{ port.port }}"
+                                                data-endpoint-label="{{ sw.host }} / {{ port.if_name or (_('Port') ~ ' ' ~ port.port) }}"
+                                                data-endpoint-location="{{ rack.server_room_name }} / {{ rack.name }} / {{ _('Rear') if current_side == 'rear' else _('Front') }}"
+                                                title="{{ sw.host }}&#10;{{ _("Port:") }} {{ port.port }}&#10;{{ _("Interface:") }} {{ port.if_name or '-' }}&#10;{{ _("Link:") }} {{ port.link or '-' }}&#10;{{ _("Speed:") }} {{ port.speed or '-' }}&#10;{{ _("Device:") }} {{ port.device or '-' }}{% if port.description %}&#10;{{ _("Note:") }} {{ port.description }}{% endif %}"
+                                            >{{ port.if_name or port.port }}</div>
+                                        {% endfor %}
+                                    {% elif slot.mode == 'ten_gigabit' %}
+                                        {% for port in slot.display_ports %}
+                                            {% set link_class = 'link-up' if port.link == 'UP' else (('link-down' if port.expected else 'link-idle') if port.link == 'DOWN' else 'link-unknown') %}
+                                            <div
+                                                id="switch-{{ sw.switch_id }}-port-{{ port.port }}"
+                                                class="rack-port switch-port c4900m-rack-port c4900m-rack-port-te {{ link_class }}"
+                                                data-endpoint-type="switch"
+                                                data-switch-id="{{ sw.switch_id }}"
+                                                data-switch-port="{{ port.port }}"
+                                                data-endpoint-label="{{ sw.host }} / {{ port.if_name or (_('Port') ~ ' ' ~ port.port) }}"
+                                                data-endpoint-location="{{ rack.server_room_name }} / {{ rack.name }} / {{ _('Rear') if current_side == 'rear' else _('Front') }}"
+                                                title="{{ sw.host }}&#10;{{ _("Port:") }} {{ port.port }}&#10;{{ _("Interface:") }} {{ port.if_name or '-' }}&#10;{{ _("Link:") }} {{ port.link or '-' }}&#10;{{ _("Speed:") }} {{ port.speed or '-' }}&#10;{{ _("Device:") }} {{ port.device or '-' }}{% if port.description %}&#10;{{ _("Note:") }} {{ port.description }}{% endif %}"
+                                            >{{ port.if_name or port.port }}</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="c4900m-rack-empty">{{ slot.slot }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="c4900m-rack-fixed-module">
+                <div class="c4900m-rack-module-title">{{ _("Fixed 10G ports") }}</div>
+                <div class="c4900m-rack-fixed-grid">
+                    {% for port in sw.cisco_4900m_panel.fixed_ports %}
+                        {% set link_class = 'link-up' if port.link == 'UP' else (('link-down' if port.expected else 'link-idle') if port.link == 'DOWN' else 'link-unknown') %}
+                        <div
+                            id="switch-{{ sw.switch_id }}-port-{{ port.port }}"
+                            class="rack-port switch-port c4900m-rack-port c4900m-rack-fixed-port {{ link_class }}"
+                            data-endpoint-type="switch"
+                            data-switch-id="{{ sw.switch_id }}"
+                            data-switch-port="{{ port.port }}"
+                            data-endpoint-label="{{ sw.host }} / {{ port.if_name or (_('Port') ~ ' ' ~ port.port) }}"
+                            data-endpoint-location="{{ rack.server_room_name }} / {{ rack.name }} / {{ _('Rear') if current_side == 'rear' else _('Front') }}"
+                            title="{{ sw.host }}&#10;{{ _("Port:") }} {{ port.port }}&#10;{{ _("Interface:") }} {{ port.if_name or '-' }}&#10;{{ _("Link:") }} {{ port.link or '-' }}&#10;{{ _("Speed:") }} {{ port.speed or '-' }}&#10;{{ _("Device:") }} {{ port.device or '-' }}{% if port.description %}&#10;{{ _("Note:") }} {{ port.description }}{% endif %}"
+                        >{{ port.if_name or port.port }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

@@ -1,0 +1,113 @@
+{# Error counters that grew in the last hours: "CRC 12 · in 3". #}
+{% macro error_parts(errors) -%}
+    {%- set parts = [] -%}
+    {%- if errors.fcs and parts.append("CRC " ~ errors.fcs) %}{% endif -%}
+    {%- if errors["in"] and parts.append(_("in") ~ " " ~ errors["in"]) %}{% endif -%}
+    {%- if errors.out and parts.append(_("out") ~ " " ~ errors.out) %}{% endif -%}
+    {{ parts | join(" · ") }}
+{%- endmacro %}
+
+{# One port cell of the switch front panel. #}
+{% macro render_port(port, label=None, extra_class="") %}
+    {% if port.link == "UP" %}
+        {% set state_class = "compact-port-up" %}
+        {% elif port.link == "DOWN" and port.expected %}
+        {# Down where something should be (a cable, a description, a device seen before). #}
+        {% set state_class = "compact-port-down" %}
+    {% elif port.link == "DOWN" %}
+        {# A free port: down is normal. #}
+        {% set state_class = "compact-port-idle" %}
+    {% else %}
+        {% set state_class = "compact-port-unknown" %}
+    {% endif %}
+
+    {# A click opens the port history (the tooltip shows on hover). #}
+    <a class="compact-port {{ state_class }} {{ extra_class }}{{ ' compact-port-errors' if port.errors }}"
+       href="{{ url_for('switches.port_history', switch_id=port.switch_id, port=port.port) }}">
+        <span class="compact-port-number">
+            {{ label if label is not none else port.port }}
+        </span>
+
+        <div class="compact-port-tooltip">
+            <div class="compact-tooltip-title">
+                {{ _("Port:") }} {{ port.port }}
+            </div>
+
+            <div class="compact-tooltip-row">
+                <strong>{{ _("Interface:") }}</strong>
+                {{ port.if_name or "-" }}
+            </div>
+
+            <div class="compact-tooltip-row">
+                <strong>{{ _("Device:") }}</strong>
+                {{ port.device or "-" }}
+            </div>
+
+            <div class="compact-tooltip-row">
+                <strong>{{ _("Speed:") }}</strong>
+                {{ port.speed or "-" }}
+            </div>
+
+            <div class="compact-tooltip-row">
+                <strong>{{ _("Link:") }}</strong>
+                {{ port.link or "-" }}
+            </div>
+
+            {% if port.vlan_text %}
+            <div class="compact-tooltip-row">
+                <strong>VLAN:</strong>
+                {{ port.vlan_text }}
+            </div>
+            {% endif %}
+
+            {% if port.errors %}
+            <div class="compact-tooltip-row compact-tooltip-errors">
+                <strong>{{ _("Errors:") }}</strong>
+                {{ error_parts(port.errors) }}
+            </div>
+            {% endif %}
+
+            <div class="compact-tooltip-separator"></div>
+
+            <div class="compact-tooltip-row">
+                <strong>IP:</strong>
+                {% if port.ips %}
+                    {{ port.ips | join(", ") }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+
+            {# The same as the Hostname column of the port table. #}
+            <div class="compact-tooltip-row">
+                <strong>{{ _("Hostname:") }}</strong>
+                {% if port.written %}
+                    <div>{{ port.written.name }} <small>({{ _("confirmed") if port.written.confirmed else _("not verified") }})</small></div>
+                {% endif %}
+                {% if port.last_known %}
+                    {% if port.last_known.name and not (port.written and port.written.name == port.last_known.name) %}<div>{{ port.last_known.name }}</div>{% endif %}
+                    <div><small>{{ _("Last known data") }}{% if port.last_known.at and format_datetime is defined %} · {{ format_datetime(port.last_known.at)[:16] }}{% endif %}</small></div>
+                {% elif port.devices %}
+                    {% for device in port.devices if device.name %}
+                        <div>{{ device.name }}{% if device.source == "manual" %} <small>({{ _("typed in by hand") }})</small>{% elif device.source == "doc" %} <small>({{ _("from the documentation") }})</small>{% endif %}</div>
+                    {% else %}{% if not port.written %}-{% endif %}{% endfor %}
+                {% elif port.manual_names or port.hostnames %}
+                    {{ port.hostname_display }}
+                {% elif port.doc_names %}
+                    {{ port.doc_names | join(", ") }} <small>({{ _("from the documentation") }})</small>
+                {% elif not port.written %}
+                    -
+                {% endif %}
+            </div>
+
+            <div class="compact-tooltip-separator"></div>
+
+            <div class="compact-tooltip-row">
+                <strong>MAC:</strong>
+                {% if port.mac_list %}{{ port.mac }}
+                {% elif port.last_known %}{{ port.last_known.mac }} <small>({{ _("Last known data") }})</small>
+                {% else %}-{% endif %}
+            </div>
+        </div>
+    </a>
+{% endmacro %}

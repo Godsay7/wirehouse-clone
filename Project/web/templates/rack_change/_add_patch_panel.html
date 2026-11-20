@@ -1,0 +1,39 @@
+{# Add Patch Panel popup form. #}
+<button class="rack-add-btn" id="btn-add-patch-panel" data-target="form-add-patch-panel" type="button" data-requires-login>{{ _("Add Patch Panel") }}</button>
+
+<div id="form-add-patch-panel" class="rack-card rack-form-popup form-popup-below" data-trigger="btn-add-patch-panel" style="display: none;">
+    <div class="rack-form-header">
+        <h3>{{ _("Add Patch Panel") }} · {{ _('Rear') if current_side == 'rear' else _('Front') }}</h3>
+        <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+    </div>
+    <form class="rack-form" method="post" action="{{ url_for('equipment.add_patch_panel', rack_id=rack.id) }}">
+        <input type="hidden" name="side" value="{{ current_side }}">
+        <label>
+            {{ _("Name") }}
+            <input type="text" name="name" placeholder="PP-01" required>
+        </label>
+        <label>
+            {{ _("Type") }}
+            <select name="patch_type">
+                <option value="ethernet" selected>Ethernet</option>
+                <option value="sdi">SDI</option>
+                <option value="odf">ODF</option>
+            </select>
+        </label>
+        <label>
+            {{ _("Rack Unit") }}
+            <input type="number" name="rack_unit" min="1" max="{{ rack.units }}" required>
+        </label>
+        <label>
+            {{ _("Ports") }}
+            <select name="port_count">
+                <option value="8">8</option>
+                <option value="12">12</option>
+                <option value="24" selected>24</option>
+                <option value="48">48</option>
+                <option value="96">96</option>
+            </select>
+        </label>
+        <button class="button" type="submit">{{ _("Save") }}</button>
+    </form>
+</div>

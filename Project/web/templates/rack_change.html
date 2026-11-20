@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% from "_assets.html" import stylesheets with context %}
+{% from "rack/render_rack.html" import render_rack %}
+
+{% block title %}{{ _("Rack Change") }}{% endblock %}
+
+{% block extra_css %}
+{{ stylesheets('rack') }}
+{% endblock %}
+
+{% block content %}
+{# Everything inside the root is replaced in place: forms, links and the
+   rack/side selectors go through htmx (hx-boost), so the page never fully
+   reloads. rack_change.js re-initialises after every swap. #}
+<div
+    id="rack-change-root"
+    hx-boost="true"
+    hx-target="#rack-change-root"
+    hx-select="#rack-change-root"
+    hx-swap="outerHTML"
+>
+{% include "_versions.html" %}
+
+<div class="rack-page-header">
+    <div>
+        <h1>{{ _("Rack Change") }}</h1>
+        {% if rack %}
+            <div class="rack-help">
+                {{ rack.server_room_name }} · {{ rack.name }} · {{ _('Rear') if current_side == 'rear' else _('Front') }}
+            </div>
+        {% elif selected_room %}
+            <div class="rack-help">{{ selected_room.name }}</div>
+        {% endif %}
+    </div>
+    <a class="rack-history-link" href="{{ url_for('changes.racks') }}" title="{{ _("Who changed what, with undo") }}">{{ _("Rack history") }}</a>
+</div>
+
+{% if error %}
+    <div class="rack-error">{{ error | tr }}</div>
+{% endif %}
+
+<div class="rack-layout">
+    <aside class="rack-sidebar">
+        {% include "rack_change/_room_card.html" %}
+
+        {% include "rack_change/_rack_card.html" %}
+
+        {% if rack %}
+
+            {% if can_edit %}
+            {% include "rack_change/_add_server.html" %}
+
+            {% include "rack_change/_add_switch.html" %}
+
+            {% include "rack_change/_add_placeholder.html" %}
+
+            {% include "rack_change/_add_patch_panel.html" %}
+
+            {% include "rack_change/_add_organizer.html" %}
+
+            {% include "rack_change/_connections_card.html" %}
+            {% endif %}
+
+            {% include "rack_change/_trunks_card.html" %}
+
+        {% endif %}
+    </aside>
+
+    <main class="rack-main">
+        {% if not rack %}
+            <div class="rack-card">
+                {% if selected_room %}
+                    <h3>{{ _("No racks in {name}", name=selected_room.name) }}</h3>
+                    <div class="rack-help">
+                        {{ _("Create the first rack for this server room using the form on the left.") }}
+                    </div>
+                {% else %}
+                    <h3>{{ _("No server rooms yet") }}</h3>
+                    <div class="rack-help">
+                        {{ _("Create the first server room using the form on the left, then create racks inside it.") }}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="rack-side-tabs">
+                <a
+                    class="rack-side-tab {% if current_side == 'front' %}active{% endif %}"
+                    href="{{ url_for('rack_change.view', rack_id=rack.id, side='front') }}"
+                >{{ _("Front") }}</a>
+                <a
+                    class="rack-side-tab {% if current_side == 'rear' %}active{% endif %}"
+                    href="{{ url_for('rack_change.view', rack_id=rack.id, side='rear') }}"
+                >{{ _("Rear") }}</a>
+
+                <div class="rack-change-zoom" role="group" aria-label="{{ _("Zoom") }}">
+                    <button type="button" data-rc-zoom="out" title="{{ _("Zoom out (−)") }}" aria-label="{{ _("Zoom out") }}">−</button>
+                    <button type="button" class="rack-change-zoom-level" data-rc-zoom="reset" title="{{ _("Back to 100% (0)") }}">100%</button>
+                    <button type="button" data-rc-zoom="in" title="{{ _("Zoom in (+)") }}" aria-label="{{ _("Zoom in") }}">+</button>
+                    <button type="button" data-rc-zoom="fit" title="{{ _("Fit the rack to the window width") }}">{{ _("Fit") }}</button>
+                </div>
+
+                <button type="button" class="rack-port-menu-toggle" data-rc-port-menu aria-pressed="false"
+                        title="{{ _("While on, tapping a port opens its menu instead of connecting it") }}">{{ _("☰ Port menu") }}</button>
+            </div>
+
+            <div class="rack-viewport">
+                {{ render_rack(
+                    rack,
+                    rack_rows,
+                    connections,
+                    current_side,
+                    editable=can_edit,
+                    component_id='',
+                    show_title=True,
+                    show_legend=True
+                ) }}
+            </div>
+        {% endif %}
+    </main>
+</div>
+
+<script type="application/json" id="rack-change-config">{{ {
+    "rackId": rack.id if rack else None,
+    "currentSide": current_side,
+    "connections": connections,
+    "connectUrl": url_for("cabling.connect"),
+    "homeUrl": url_for("rack_change.home"),
+} | tojson }}</script>
+</div>
+
+<script src="{{ url_for('static', filename='js/cable_path.js') }}?v={{ asset_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/rack_cables.js') }}?v={{ asset_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/rack_change.js') }}?v={{ asset_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/rack_move.js') }}?v={{ asset_version }}" defer></script>
+
+{% endblock %}

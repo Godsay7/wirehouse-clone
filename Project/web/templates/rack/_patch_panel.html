@@ -1,0 +1,45 @@
+{# Patch panel (Ethernet / SDI / ODF). Uses: rack_row, editable, rack, current_side. #}
+{% set panel = rack_row.device.data %}
+{% set patch_type = panel.patch_type or 'ethernet' %}
+{% set patch_type_label = 'ODF' if patch_type == 'odf' else ('SDI' if patch_type == 'sdi' else 'Ethernet') %}
+{# odd_even: 1, 3, 5 … on top, 2, 4, 6 … below (the grid fills column by column). #}
+{% set odd_even = panel.port_layout == 'odd_even' %}
+{# Signed in, Rack Change: dragged by its header to another unit (js/rack_move.js). #}
+<div class="rack-device patch-panel patch-panel-{{ patch_type }}"{% if editable %} data-move-url="{{ url_for('equipment.move_patch_panel', rack_id=rack.id, panel_id=panel.id) }}" data-move-key="patch_panel-{{ panel.id }}" data-move-top="{{ panel.rack_unit }}" data-move-height="1" data-move-name="{{ panel.name }}"{% endif %}>
+    <div class="rack-device-header">
+        <div>
+             <div class="rack-device-name">{{ panel.name }}</div>
+             <div class="rack-device-meta">{{ _("{type} Patch Panel", type=patch_type_label) }} · {{ _n("{n} port", "{n} ports", panel.port_count) }}</div>
+        </div>
+
+        {% if editable %}
+        <form class="patch-layout-form" method="post"
+            action="{{ url_for('equipment.patch_panel_layout', rack_id=rack.id, panel_id=panel.id, side=current_side) }}">
+            <input type="hidden" name="port_layout" value="{{ 'row' if odd_even else 'odd_even' }}">
+            <button class="patch-layout-button" type="submit"
+                    title="{{ _("Ports in one row: 1, 2, 3 …") if odd_even else _("Odd ports on top, even below: 1 / 2, 3 / 4 …") }}">
+                {{ _("Ports in a row") if odd_even else _("Ports 1 / 2") }}</button>
+        </form>
+        <form class="rack-remove-form" method="post"
+            action="{{ url_for('equipment.delete_patch_panel', rack_id=rack.id, panel_id=panel.id, side=current_side) }}"
+            hx-confirm="{{ _("Delete this patch panel and its connections?") }}">
+            <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="rack-patch-ports rack-patch-ports-{{ panel.port_count }}{{ ' rack-patch-ports-odd-even' if odd_even }}">
+        {% for port in panel.ports %}
+        <div id="patch-{{ panel.id }}-port-{{ port.port }}"
+            class="rack-port patch-port patch-port-{{ patch_type }}{{ ' patch-port-top' if odd_even and port.port is odd }}"
+            data-endpoint-type="patch"
+            data-patch-panel-id="{{ panel.id }}"
+            data-patch-port="{{ port.port }}"
+            data-patch-type="{{ patch_type }}"
+            data-endpoint-label="{{ panel.name }} / {{ _("Port") }} {{ port.port }}"
+            data-endpoint-location="{{ rack.server_room_name }} / {{ rack.name }} / {{ _('Rear') if current_side == 'rear' else _('Front') }}"
+            title="{{ panel.name }}&#10;{{ _("Type:") }} {{ patch_type_label }}&#10;{{ _("Port:") }} {{ port.port }}{% if port.label %}&#10;{{ _("Label:") }} {{ port.label }}{% endif %}{% if port.description %}&#10;{{ port.description }}{% endif %}">
+            {{ port.port }}</div>
+        {% endfor %}
+    </div>
+</div>

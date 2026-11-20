@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Rack History") }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/changes.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="changes-header">
+    <div>
+        <h1>{{ _("Rack History") }}</h1>
+        <p class="history-lead">
+            {{ _("Every change made in Rack Change, Rack View and the Cabling Check: cables, equipment, port notes, trunks.") }}
+            <b>{{ _("Undo") }}</b> {{ _("puts all of it back exactly as it was — refused if the same things were changed again later.") }}
+        </p>
+    </div>
+</div>
+
+{# Search and filters (GET): text in what changed / who, server room, user, dates. #}
+<form class="history-filters" method="get" action="{{ url_for('changes.racks') }}" role="search">
+    <input type="search" name="q" value="{{ filters.text or '' }}" class="history-filter-text"
+           placeholder="{{ _("Device, port, rack, note, user, #number…") }}" aria-label="{{ _("Search") }}">
+    <select name="room" aria-label="{{ _("Server room") }}">
+        <option value="">{{ _("All server rooms") }}</option>
+        {% for room in rooms %}
+        <option value="{{ room.id }}"{{ ' selected' if filters.room_id == room.id }}>{{ room.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="user" aria-label="{{ _("User") }}">
+        <option value="">{{ _("All users") }}</option>
+        {% for user in users %}
+        <option value="{{ user }}"{{ ' selected' if filters.user == user }}>{{ user }}</option>
+        {% endfor %}
+    </select>
+    <label class="history-filter-date">{{ _("from") }} <input type="date" name="since" value="{{ filters.since or '' }}"></label>
+    <label class="history-filter-date">{{ _("to") }} <input type="date" name="until" value="{{ filters.until or '' }}"></label>
+    <button type="submit" class="button">{{ _("Search") }}</button>
+    {% if filters %}<a class="button secondary" href="{{ url_for('changes.racks') }}">{{ _("Clear") }}</a>{% endif %}
+</form>
+
+{% if message %}<div class="rack-history-message">{{ message | tr }}</div>{% endif %}
+{% if error %}<div class="rack-history-message is-error">{{ error | tr }}</div>{% endif %}
+
+<div id="rack-history-live" hx-get="{{ request.full_path }}" hx-trigger="rack-changed from:body"
+     hx-select="#rack-history-live" hx-swap="outerHTML">
+{% include "_versions.html" %}
+<div class="table-container">
+<table class="changes-table rack-history-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>{{ _("Date / Time") }}</th>
+            <th>{{ _("Who") }}</th>
+            <th>{{ _("What changed") }}</th>
+            {% if can_edit %}<th></th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in entries %}
+        {# The row opens where the change happened: the rack at that port, or the room's board. #}
+        {% set t = entry.target %}
+        {% if t and t.rack_id %}
+            {% set target_url = rack_url(t.rack_id, t.side, t.focus) %}
+        {% elif t and t.room_id %}
+            {% set target_url = url_for('rack_view.home', room_id=t.room_id) %}
+        {% else %}
+            {% set target_url = None %}
+        {% endif %}
+        <tr class="{{ 'is-undone' if entry.undone_by }}{{ ' row-link' if target_url }}"{% if target_url %} data-href="{{ target_url }}" title="{{ _("Open where this change was made") }}"{% endif %}>
+            <td class="changes-time">{% if target_url %}<a class="row-link-main" href="{{ target_url }}">{{ entry.id }}</a>{% else %}{{ entry.id }}{% endif %}</td>
+            <td class="changes-time">{{ format_datetime(entry.at) }}</td>
+            <td class="rack-history-who">{% if entry.actor_user %}<b class="rack-history-user">{{ entry.actor_user }}</b><br>{% endif %}{{ entry.who | tr }}</td>
+            <td>
+                {% if entry.undo_of %}<div class="rack-history-tag">{{ _("Undo of #{n}", n=entry.undo_of) }}</div>{% endif %}
+                {% for line in entry.lines[:8] %}<div class="rack-history-line">{{ line | tr }}</div>{% endfor %}
+                {% if entry.lines | length > 8 %}
+                <details class="rack-history-more">
+                    <summary>{{ _("{n} more", n=entry.lines | length - 8) }}</summary>
+                    {% for line in entry.lines[8:] %}<div class="rack-history-line">{{ line | tr }}</div>{% endfor %}
+                </details>
+                {% endif %}
+                {% if entry.undone_by %}<div class="rack-history-tag">{{ _("Undone by #{n}", n=entry.undone_by) }}</div>{% endif %}
+            </td>
+            {% if can_edit %}
+            <td>
+                {% if entry.can_undo %}
+                <form method="post" action="{{ url_for('changes.undo_rack_change', audit_id=entry.id) }}"
+                      onsubmit="return confirm({{ _('Undo change #{n}?', n=entry.id) | tojson | forceescape }});">
+                    <button type="submit" class="button secondary rack-history-undo" data-requires-login>{{ _("Undo") }}</button>
+                </form>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="{{ 5 if can_edit else 4 }}" class="empty-history">{{ _("No changes found.") if filters else _("No rack changes recorded yet.") }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% if older %}
+<p><a class="button secondary" href="{{ url_for('changes.racks', before=older, q=filters.text, room=filters.room_id, user=filters.user, since=filters.since, until=filters.until) }}">{{ _("Older changes") }}</a></p>
+{% endif %}
+</div>
+
+{% endblock %}

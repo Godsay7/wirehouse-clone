@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v={{ asset_version }}">
+<script src="{{ url_for('static', filename='js/home.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+
+{% from "_time.html" import ago with context %}
+
+
+
+
+{% block content %}
+
+
+{# ---------------- Search: suggestions while typing, examples to try ---------------- #}
+<section class="home-hero">
+    <div class="home-hero-head">
+        <div>
+            <h1>{{ _("Suspilne network") }}</h1>
+            <p>{{ _("Switches, racks, cabling and floor maps.") }}</p>
+        </div>
+        <div id="home-freshness" class="home-freshness is-{{ freshness }}"
+             hx-get="{{ url_for('home.index') }}" hx-trigger="inventory-changed from:body" hx-select="#home-freshness" hx-swap="outerHTML"
+             title="{{ _("The switches are polled every 5 minutes") }}">
+            <span class="home-freshness-dot" aria-hidden="true"></span>
+            {% if freshness == "fresh" %}{{ _("Data is up to date") }}
+            {% elif freshness == "late" %}{{ _("Data is a little late") }}
+            {% elif freshness == "stale" %}{{ _("Data is out of date") }}
+            {% else %}{{ _("No polls yet") }}{% endif %}
+            {% if last_poll %}<span class="home-freshness-time">· {{ _("last poll") }} {{ ago(last_poll, last_poll_minutes) }}</span>{% endif %}
+        </div>
+    </div>
+
+    <form class="home-search" method="get" action="{{ url_for('dashboard.index') }}" role="search"
+          data-suggest-url="{{ url_for('dashboard.suggest') }}">
+        <div class="home-search-box">
+            <input type="search" name="search" role="combobox" placeholder="{{ _("Find a PC, IP, MAC, socket, server, patch panel, rack…") }}"
+                   autocomplete="off" aria-autocomplete="list" aria-controls="home-suggest" aria-expanded="false">
+            <div id="home-suggest" class="home-suggest" role="listbox" hidden></div>
+        </div>
+        <button class="button" type="submit">{{ _("Search") }}</button>
+    </form>
+    <div class="home-examples">
+        <span>{{ _("For example:") }}</span>
+        <button type="button" data-example="NH-JOURN" title="{{ _("PC name") }}">NH-JOURN</button>
+        <button type="button" data-example="10.13.40." title="{{ _("IP address") }}">10.13.40.</button>
+        <button type="button" data-example="vlan 140" title="{{ _("Every port of a VLAN") }}">vlan 140</button>
+        <button type="button" data-example="2-19" title="{{ _("Wall socket") }}">2-19</button>
+        <button type="button" data-example="ODF" title="{{ _("Patch panels and ODF") }}">ODF</button>
+    </div>
+</section>
+
+{# ---------------- The state at a glance (refreshes after every poll / rack change) ---------------- #}
+<div id="home-status" hx-get="{{ url_for('home.index') }}" hx-trigger="inventory-changed from:body, rack-changed from:body"
+     hx-select="#home-status" hx-swap="outerHTML">
+{% include "_versions.html" %}
+<div class="stats home-status">
+    <a class="stat {{ 'is-warn' if stale_switches else 'is-good' }}" href="{{ url_for('dashboard.index') }}">
+        <span class="stat-label">{{ _("Switches") }}</span>
+        <b class="stat-value">{{ switch_count }}</b>
+        <span class="stat-note">
+            {% if stale_switches %}{{ _n("{n} not polled recently", "{n} not polled recently", stale_switches | length) }}
+            {% else %}{{ _("all answer") }}{% endif %}
+        </span>
+    </a>
+    <a class="stat" href="{{ url_for('dashboard.index') }}">
+        <span class="stat-label">{{ _("Ports up / down") }}</span>
+        <b class="stat-value"><span class="up">{{ statistics.up_ports or 0 }}</span> / <span class="down">{{ statistics.down_ports or 0 }}</span></b>
+        <span class="stat-note">{{ _n("of {n} port", "of {n} ports", statistics.total_ports or 0) }} · {{ _("{n} with devices", n=statistics.mac_count or 0) }}</span>
+    </a>
+    <a class="stat {{ 'is-warn' if error_port_count else 'is-good' }}" href="{{ url_for('dashboard.index', errors=1) }}">
+        <span class="stat-label">{{ _("Ports with errors") }}</span>
+        <b class="stat-value">{{ error_port_count }}</b>
+        <span class="stat-note">{{ _("errors grew in the last {n} h", n=error_window_hours) if error_port_count else _("no errors in the last {n} h", n=error_window_hours) }}</span>
+    </a>
+    <a class="stat {{ 'is-bad' if check.neighbor_mismatch else ('is-warn' if check_problems else 'is-good') }}" href="{{ url_for('checks.index') }}">
+        <span class="stat-label">{{ _("Cabling issues") }}</span>
+        <b class="stat-value">{{ check_problems }}</b>
+        <span class="stat-note">{{ _("documentation vs. what the switches see") if check_problems else _("matches the documentation") }}</span>
+    </a>
+    <a class="stat" href="{{ url_for('rack_view.home') }}">
+        <span class="stat-label">{{ _("Racks") }}</span>
+        <b class="stat-value">{{ rack_count }}</b>
+        <span class="stat-note">{{ _n("in {n} server room", "in {n} server rooms", room_count) }}</span>
+    </a>
+    <a class="stat" href="{{ url_for('floor_maps.home') }}">
+        <span class="stat-label">{{ _("Maps") }}</span>
+        <b class="stat-value">{{ map_count }}</b>
+        <span class="stat-note">{{ _("workplaces, phones, Wi‑Fi") }}</span>
+    </a>
+</div>
+</div>
+
+{# ---------------- Sections: each page is a big button, its description shows on hover ---------------- #}
+{% macro sub(href, title, description, icon) -%}
+<a class="home-sub" href="{{ href }}" aria-describedby="{{ title | lower | replace(' ', '-') }}-{{ icon }}-tip">
+    <span class="home-sub-title">{{ title }}</span>
+    <span class="home-sub-tip" role="tooltip" id="{{ title | lower | replace(' ', '-') }}-{{ icon }}-tip">{{ description }}</span>
+</a>
+{%- endmacro %}
+
+<div class="home-groups">
+    <section class="home-group">
+        <div class="home-group-head">
+            <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 11h2M10 11h2M14 11h2M6 14h2M10 14h2M14 14h2"/></svg>
+            <div>
+                <h2>{{ _("Switches") }}</h2>
+                <p>{{ _("Ports, devices, VLANs and errors, polled every 5 minutes.") }}</p>
+            </div>
+        </div>
+        <nav class="home-subs">
+            {{ sub(url_for('dashboard.index'), _("Dashboard"), _("All switches with port counts. Search any device by IP, MAC, hostname — or by what is written in the racks and maps."), "sw") }}
+            {{ sub(url_for('checks.index'), _("Check"), _("Documented cabling compared with LLDP/CDP, port descriptions and link state; download the cable journal in Excel.") if can_edit else _("Documented cabling compared with LLDP/CDP, port descriptions and link state."), "sw") }}
+            {{ sub(url_for('changes.index'), _("History"), _("What changed on switch ports: links going up or down, speed, devices that appeared or left."), "sw") }}
+            {# The cable checklist: only for signed-in users (blueprints/checklist.py). #}
+            {% if checklist_allowed %}
+            {{ sub(url_for('checklist.index'), _("Cable checklist"), _("Every port of every switch: confirm the cabling you have checked in the rack, mark cables to replace or to lay neatly."), "sw") }}
+            {% endif %}
+        </nav>
+    </section>
+    <section class="home-group">
+        <div class="home-group-head">
+            <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="1.5"/><path d="M8 6h8M8 10h8M8 14h8M8 18h8"/></svg>
+            <div>
+                <h2>{{ _("Racks") }}</h2>
+                <p>{{ _("What is mounted where, and which cable goes where.") }}</p>
+            </div>
+        </div>
+        <nav class="home-subs">
+            {{ sub(url_for('rack_view.home'), _("View"), _("Each server room as a board of racks. Open a rack to see its cables and trace a cable path."), "rack") }}
+            {% if can_edit %}
+            {{ sub(url_for('rack_change.home'), _("Change"), _("Mount and remove equipment, connect cables, write port notes, add trunks between ODF panels."), "rack") }}
+            {% endif %}
+            {{ sub(url_for('changes.racks'), _("History"), _("Who changed what in the racks and when — any change can be undone."), "rack") }}
+        </nav>
+    </section>
+    <section class="home-group">
+        <div class="home-group-head">
+            <svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
+            <div>
+                <h2>{{ _("Maps") }}</h2>
+                <p>{{ _("Floor plans: who sits where and which socket they use.") }}</p>
+            </div>
+        </div>
+        <nav class="home-subs">
+            {{ sub(url_for('floor_maps.home'), _n("{n} map", "{n} maps", map_count), _("Floor plans of the newsroom, studios and offices: rooms, work areas, workplaces, phones and Wi-Fi access points. Hover a PC to see the switch port it is connected to right now."), "map") }}
+        </nav>
+        {# Straight to one map. #}
+        {% if maps %}
+        <ul class="home-map-list">
+            {% for floor_map in maps %}
+            <li><a href="{{ url_for('floor_maps.view', map_id=floor_map.id) }}">{{ floor_map.name }}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </section>
+</div>
+
+{% endblock %}

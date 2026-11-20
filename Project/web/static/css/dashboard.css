@@ -1,0 +1,213 @@
+.switch-name-with-vendor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.vendor-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.vendor-cisco {
+    color: light-dark(#0b57d0, #77a9f9);
+    background: var(--accent-soft);
+    border-color: light-dark(#9ec5fe, #25436d);
+}
+
+.vendor-dell {
+    color: light-dark(#006f85, #8becff);
+    background: light-dark(#e8fbff, #0f2d33);
+    border-color: light-dark(#8edbe8, #35636a);
+}
+
+.vendor-mikrotik {
+    color: var(--danger-text);
+    background: var(--danger-soft);
+    border-color: light-dark(#f3a6b0, #662e35);
+}
+
+.vendor-unknown {
+    color: var(--text-muted);
+    background: var(--surface-3);
+    border-color: var(--border);
+}
+
+
+.inventory-search-card {
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.inventory-search-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inventory-search-form input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.inventory-search-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+
+.inventory-search-help {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.inventory-search-results {
+    margin: 12px 0 20px;
+}
+
+.inventory-search-summary {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+.inventory-search-results td {
+    vertical-align: middle;
+}
+
+.inventory-search-device {
+    max-width: 280px;
+    overflow-wrap: anywhere;
+}
+
+.inventory-search-mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+/* Long text and lists (several IPs, hostnames, MACs on one port) wrap, so
+   the search results fit the page instead of running past its right edge
+   (base.css keeps table cells on one line). */
+.table-container td.inventory-search-device,
+.table-container td.inventory-search-list,
+.doc-results td:not(.doc-actions) {
+    white-space: normal;
+    /* Between list items; inside a name only when it cannot fit at all. */
+    overflow-wrap: break-word;
+}
+
+.table-container td.inventory-search-list {
+    min-width: 110px;
+    max-width: 300px;
+}
+
+/* A usual name (NH-JOURN110.newshouse.lan) stays on one line where the
+   page is wide enough; on narrower screens it wraps rather than pushing
+   the table past the page. */
+@media (min-width: 1280px) {
+    .table-container td.inventory-search-hostname {
+        min-width: 210px;
+    }
+}
+
+@media (max-width: 1279px) {
+    /* A MAC address is never cut in two (several wrap between them). */
+    .table-container td.inventory-search-list:not(.inventory-search-mac),
+    .doc-results td:not(.doc-actions) {
+        overflow-wrap: anywhere;
+    }
+
+    .table-container th,
+    .table-container td {
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+}
+
+.doc-results td:not(.doc-actions) {
+    max-width: 320px;
+}
+
+@media (max-width: 700px) {
+    .inventory-search-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+
+/* Documentation results of the search (Rack Change / Floor Maps) */
+.doc-results-title {
+    margin: 18px 0 8px;
+    font-size: 16px;
+}
+
+.doc-results-title small {
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: normal;
+    color: var(--text-muted);
+}
+
+.doc-kind {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.doc-actions {
+    white-space: nowrap;
+}
+
+.doc-actions .button {
+    padding: 4px 9px;
+    font-size: 12px;
+}
+
+
+/* Switch list: columns centred, switch names a little larger. */
+/* Names read from the left, numbers line up on the right. */
+.switches-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.switches-table .muted {
+    color: var(--text-muted);
+}
+
+.switches-table .switch-name-with-vendor strong {
+    font-size: 15px;
+}
+
+/* Not polled for 20 minutes or more. */
+.switches-table .is-stale {
+    color: var(--warn-text);
+    font-weight: 600;
+}
+
+/* The "Ports with errors" card opens the list of those ports. */

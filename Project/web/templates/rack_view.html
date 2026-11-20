@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% from "_assets.html" import stylesheets with context %}
+{% from "rack/render_rack.html" import render_rack %}
+
+{% block title %}{{ _("Rack View") }}{% endblock %}
+
+{% block extra_css %}
+{{ stylesheets('rack') }}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+
+{# rack_view.js refreshes this root in place when rack or inventory data
+   changes (unless a rack is being dragged or is opened in detail). #}
+<div class="rack-dashboard-page" id="rack-view-root">
+{% include "_versions.html" %}
+    <div class="rack-dashboard-toolbar">
+        <div>
+            <h1>{{ _("Rack View") }}</h1>
+            {% if selected_room %}
+                <div class="rack-dashboard-summary">
+                    {{ selected_room.name }} · {{ _n("{n} rack", "{n} racks", rack_cards|length) }}
+                </div>
+            {% else %}
+                <div class="rack-dashboard-summary">{{ _("Select a server room to view its racks.") }}</div>
+            {% endif %}
+        </div>
+
+        {% if server_rooms %}
+            <div class="rack-dashboard-toolbar-actions">
+                <div class="rack-room-picker">
+                    <label>
+                        {{ _("Server Room") }}
+                        <select id="rack-view-room-selector">
+                            {% for room in server_rooms|sort(attribute='name') %}
+                                <option
+                                    value="{{ room.id }}"
+                                    {% if selected_room and room.id == selected_room.id %}selected{% endif %}
+                                >{{ room.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+
+                {% if selected_room and rack_cards %}
+                    {% if board_layout != 'custom' %}
+                        <button type="button" class="rack-dashboard-toggle-empty" id="rack-view-toggle-empty">{{ _("Hide empty slots") }}</button>
+                    {% endif %}
+                    {% if rack_slots | selectattr('card', 'none') | list %}
+                        <button type="button" class="rack-dashboard-toggle-empty" id="rack-view-remove-empty" data-requires-login
+                                title="{{ _("Keep only positions with a rack; every rack stays in its row") }}">{{ _("Remove empty slots") }}</button>
+                    {% endif %}
+                    <button type="button" class="rack-dashboard-toggle-empty" id="rack-view-add-slot" data-requires-login
+                            title="{{ _("Add an empty position after the last one, then drag a rack into it") }}">{{ _("+ Add empty slot") }}</button>
+                    <button type="button" class="rack-dashboard-reset-layout" id="rack-view-reset-layout" data-requires-login
+                            title="{{ _("Back to the standard 2 × 6 positions in the default order") }}">{{ _("Reset rack order") }}</button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if selected_room %}
+        <div class="rack-view-readonly-warning" role="note">
+            <strong>{{ _("Rack View is read-only.") }}</strong>
+            {% if can_edit %}
+            {{ _("Connections cannot be created, changed or removed on this page. To work with connections or rack equipment, use") }}
+            <a href="{{ url_for('rack_change.home') }}">{{ _("Rack Change") }}</a>.
+            {% else %}
+            {{ _("To change racks and connections,") }}
+            <a href="{{ url_for('auth.login', next=request.full_path.rstrip('?')) }}">{{ _("sign in") }}</a>.
+            {% endif %}
+        </div>
+
+        <div class="rack-dashboard-legend">
+            <span><span class="legend-dot legend-up"></span>{{ _("Switch port UP") }}</span>
+            <span><span class="legend-dot legend-down"></span>{{ _("Switch port DOWN") }}</span>
+            <span title="{{ _("Down and nothing expected on it") }}"><span class="legend-dot legend-idle"></span>{{ _("Free switch port") }}</span>
+            <span><span class="legend-dot legend-ethernet"></span>{{ _("Ethernet link") }}</span>
+            <span><span class="legend-dot legend-fiber"></span>{{ _("ODF / Fiber link") }}</span>
+            <span><span class="legend-dot legend-sdi"></span>{{ _("SDI link") }}</span>
+            {% if board_layout == 'custom' %}
+                <span>{{ _("Only racks and the empty positions you added are shown.") }}</span>
+            {% else %}
+                <span>{{ _("12 fixed positions: 2 rows × 6 slots.") }}</span>
+            {% endif %}
+            <span>{{ _("Drag a rack by its title into any grey slot. Dropping onto another rack swaps them.") }}</span>
+        </div>
+
+        <div
+            class="rack-dashboard-board"
+            data-rack-board
+            data-room-id="{{ selected_room.id }}"
+            data-layout="{{ board_layout or 'grid' }}"
+            data-slot-columns="{{ rack_slot_columns or 6 }}"
+            style="--rack-slot-columns: {{ rack_slot_columns or 6 }}; --rack-active-columns: {{ rack_slot_columns or 6 }};"
+        >
+            {% for slot in rack_slots %}
+                {# A narrower rack (racks.width_percent) gets a narrower position too. #}
+                {% set narrow = slot.card and slot.card.rack.width_percent and slot.card.rack.width_percent < 100 %}
+                <div
+                    class="rack-dashboard-slot{% if slot.card %} is-occupied{% else %} is-empty{% endif %}{{ ' is-narrow' if narrow }}"
+                    data-rack-slot
+                    data-slot-index="{{ slot.index }}"
+                    {%- if narrow %} style="--rack-slot-share: {{ slot.card.rack.width_percent / 100 }};"{% endif %}
+                >
+                    <div class="rack-dashboard-empty-slot" data-empty-slot-label>
+                        <span class="rack-dashboard-slot-number">{{ slot.index + 1 }}</span>
+                        <span class="rack-dashboard-empty-slot-text">{{ _("Empty rack position") }}</span>
+                        <button type="button" class="rack-dashboard-slot-remove" data-remove-slot="{{ slot.index }}" data-requires-login
+                                title="{{ _("Remove this empty position") }}" aria-label="{{ _("Remove this empty position") }}">×</button>
+                    </div>
+
+                    {% if slot.card %}
+                        {% set card = slot.card %}
+                        <section
+                            class="rack-dashboard-card"
+                            data-rack-card
+                            data-rack-id="{{ card.rack.id }}"
+                            data-rack-units="{{ card.rack.units }}"
+                        >
+                            <div class="rack-dashboard-card-header">
+                                <div class="rack-dashboard-drag-handle" data-rack-drag-handle{% if can_edit %} title="{{ _("Drag rack to another position") }}"{% endif %}>
+                                    <span class="rack-dashboard-grip" aria-hidden="true">••••</span>
+                                    <div class="rack-dashboard-card-title">
+                                        <strong>{{ card.rack.name }}</strong>
+                                        <span data-rack-meta>{{ card.rack.units }}U · {{ _('Front') }} · {{ _n("{n} connection", "{n} connections", card.front.connections|length) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="rack-dashboard-card-actions">
+                                    <div class="rack-detail-zoom" role="group" aria-label="{{ _("Zoom") }}">
+                                        <button type="button" data-rack-zoom="out" title="{{ _("Zoom out (−)") }}" aria-label="{{ _("Zoom out") }}">−</button>
+                                        <button type="button" class="rack-detail-zoom-level" data-rack-zoom="reset" title="{{ _("Back to 100% (0)") }}">100%</button>
+                                        <button type="button" data-rack-zoom="in" title="{{ _("Zoom in (+)") }}" aria-label="{{ _("Zoom in") }}">+</button>
+                                        <button type="button" data-rack-zoom="fit" title="{{ _("Fit the rack to the window width") }}">{{ _("Fit") }}</button>
+                                    </div>
+                                    <button type="button" class="rv-port-menu-toggle" data-rv-port-menu aria-pressed="false"
+                                            title="{{ _("While on, tapping a port shows its details and cable path") }}">{{ _("☰ Port menu") }}</button>
+                                    <div class="rack-local-side-toggle" role="group" aria-label="{{ _("Rack side") }}">
+                                        <button type="button" class="active" data-rack-side-button="front">F</button>
+                                        <button type="button" data-rack-side-button="rear">R</button>
+                                    </div>
+                                    <button type="button" class="rack-dashboard-close-detail" data-rack-close-detail aria-label="{{ _("Close rack view") }}">{{ _("Close") }}</button>
+                                </div>
+                            </div>
+
+                            <div class="rack-dashboard-card-body" data-rack-open-detail title="{{ _("Click to open this rack") }}">
+                                <div class="rack-dashboard-side" data-rack-side-panel="front">
+                                    <div class="rack-preview-stage">
+                                        <div class="rack-preview-scale">
+                                            {{ render_rack(
+                                                card.rack,
+                                                card.front.rack_rows,
+                                                card.front.connections,
+                                                'front',
+                                                editable=False,
+                                                component_id='view-' ~ card.rack.id ~ '-front',
+                                                show_title=False,
+                                                show_legend=False
+                                            ) }}
+                                        </div>
+                                    </div>
+                                    <script type="application/json" data-rack-connections="front">{{ card.front.connections | tojson }}</script>
+                                </div>
+
+                                <div class="rack-dashboard-side" data-rack-side-panel="rear" hidden>
+                                    <div class="rack-preview-stage">
+                                        <div class="rack-preview-scale">
+                                            {{ render_rack(
+                                                card.rack,
+                                                card.rear.rack_rows,
+                                                card.rear.connections,
+                                                'rear',
+                                                editable=False,
+                                                component_id='view-' ~ card.rack.id ~ '-rear',
+                                                show_title=False,
+                                                show_legend=False
+                                            ) }}
+                                        </div>
+                                    </div>
+                                    <script type="application/json" data-rack-connections="rear">{{ card.rear.connections | tojson }}</script>
+                                </div>
+                            </div>
+                        </section>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="rack-detail-backdrop" id="rack-detail-backdrop" aria-hidden="true"></div>
+    {% else %}
+        <div class="rack-dashboard-empty">
+            {{ _("No server rooms are configured yet. Use") }} <strong>{{ _("Rack Change") }}</strong> {{ _("to create the first server room and rack.") }}
+        </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/cable_path.js') }}?v={{ asset_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/rack_cables.js') }}?v={{ asset_version }}" defer></script>
+<script src="{{ url_for('static', filename='js/rack_view.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}

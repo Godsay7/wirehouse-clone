@@ -1,0 +1,6 @@
+{# Import with context: {% from "_assets.html" import stylesheets with context %} #}
+{% macro stylesheets(bundle) -%}
+{% for path in css_bundles[bundle] %}
+<link rel="stylesheet" href="{{ url_for('static', filename=path) }}?v={{ asset_version }}">
+{% endfor %}
+{%- endmacro %}

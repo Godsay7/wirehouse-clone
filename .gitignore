@@ -1,0 +1,21 @@
+*.db
+venv/
+__pycache__/
+*.pyc
+*.save
+*.bak
+
+# Pre-refactor code and manual backups (kept locally, see old/README.md)
+old/
+*.db-wal
+*.db-shm
+
+# Local config with the SNMP community (template: config/switches.yaml.example)
+config/switches.yaml
+
+# Web sign-in: users with password hashes and the session key (Project/web/auth.py)
+config/web_users
+config/secret_key
+
+# CSS lint (stylelint, package.json): installed with `npm install`
+node_modules/

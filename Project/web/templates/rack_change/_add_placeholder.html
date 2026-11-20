@@ -1,0 +1,41 @@
+{# Add Temporary Switch popup form. #}
+<button class="rack-add-btn rack-add-placeholder-btn" id="btn-add-switch-placeholder" data-target="form-add-switch-placeholder" type="button" data-requires-login>{{ _("Add Temporary Switch") }}</button>
+
+<div id="form-add-switch-placeholder" class="rack-card rack-form-popup form-popup-below" data-trigger="btn-add-switch-placeholder" style="display: none;">
+    <div class="rack-form-header">
+        <h3>{{ _("Temporary Switch") }} · {{ _('Rear') if current_side == 'rear' else _('Front') }}</h3>
+        <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+    </div>
+    <form class="rack-form" method="post" action="{{ url_for('equipment.add_placeholder', rack_id=rack.id) }}">
+        <input type="hidden" name="side" value="{{ current_side }}">
+        <label>
+            {{ _("Name") }}
+            <input type="text" name="name" placeholder="NH-SW108" required>
+        </label>
+        <label>
+            {{ _("Model / Note") }}
+            <input type="text" name="model" placeholder="{{ _("C9300-48T / planned switch") }}">
+        </label>
+        <label>
+            {{ _("Rack Unit (top U)") }}
+            <input type="number" name="rack_unit" min="1" max="{{ rack.units }}" required>
+        </label>
+        <label>
+            {{ _("Height") }}
+            <select name="height_units">
+                <option value="1" selected>1U</option>
+                <option value="2">2U</option>
+                <option value="3">3U</option>
+                <option value="4">4U</option>
+            </select>
+        </label>
+        <label>
+            {{ _("Placeholder ports") }}
+            <input type="number" name="port_count" value="24" min="0" max="192">
+        </label>
+        <div class="rack-help">
+            {{ _("For a switch that is not in the SNMP inventory (yet): it takes rack units and its ports take cables and notes like a real switch. Remove it when the real switch appears in inventory (its cables go with it).") }}
+        </div>
+        <button class="button" type="submit">{{ _("Save Temporary Switch") }}</button>
+    </form>
+</div>

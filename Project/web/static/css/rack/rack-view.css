@@ -1,0 +1,956 @@
+/* ==========================================================
+   Rack View: the board of racks of one server room and the opened
+   (expanded) rack.
+
+   - The board is a grid of fixed positions (2 rows x 6 on desktop);
+     empty positions stay visible as grey placeholders.
+   - Rack previews are zoomed to fit their position, without phantom
+     height; the opened rack has its own zoom (rack_view.js).
+   - Cards are reordered by dragging the title / grip.
+   - Rules are scoped to the board classes (.rack-dashboard-*,
+     .rack-preview-*, .rack-detail-*), so Rack Change is not affected;
+     Rack Change's own rules are in rack.css and rack-change.css.
+
+   Was rack-view-board.css + rack-view-fixes.css; rules for the same
+   selector are folded together, in cascade order.
+   ========================================================== */
+
+.rack-dashboard-page .rack-dashboard-toolbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.rack-dashboard-page .rack-dashboard-toolbar h1 {
+    margin: 0 0 4px 0;
+}
+
+.rack-dashboard-toolbar-actions {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.rack-room-picker {
+    min-width: 260px;
+}
+
+.rack-room-picker label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-2);
+}
+
+.rack-room-picker select {
+    min-width: 260px;
+    height: 36px;
+    padding: 5px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.rack-dashboard-reset-layout {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rack-dashboard-reset-layout:hover {
+    background: var(--surface-3);
+}
+
+.rack-dashboard-summary {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.rack-dashboard-legend {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 0 14px 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 11px;
+}
+.rack-dashboard-card:hover {
+    border-color: var(--border);
+    box-shadow: 0 3px 10px rgba(22, 34, 46, .08);
+}
+
+.rack-dashboard-card-title {
+    min-width: 0;
+}
+
+.rack-local-side-toggle button.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    box-shadow: inset 0 0 0 1px #9ec0f4;
+}
+
+.rack-dashboard-side[hidden] {
+    display: none;
+}
+
+/* v16 intentionally does not transform/scale Rack View racks. */
+
+/* Stable physical width, close to Rack Change. */
+
+.rack-dashboard-empty {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-muted);
+}
+
+.rack-component-no-title .rack-frame {
+    border-top-width: 8px;
+}
+
+/* A normal desktop gets 2 cards; very wide screens naturally get 3. */
+@media (max-width: 860px) {
+    .rack-dashboard-card {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .rack-room-picker,
+    .rack-room-picker select {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Rack Change keeps the proven pre-v13 two-column editor layout. */
+
+
+.rack-dashboard-page {
+    position: relative;
+    width: auto;
+    max-width: none;
+}
+
+.rack-dashboard-page .rack-dashboard-legend {
+    margin-bottom: 10px;
+    padding: 6px 8px;
+    gap: 9px;
+    font-size: 10px;
+}
+
+/* Normal mode is 6 fixed positions per row. When empty positions are hidden,
+   JavaScript changes --rack-active-columns to the actual rack count (max 6),
+   allowing the remaining racks to grow instead of leaving blank columns
+   (on narrow screens too: rack_view.js sets 2 or 3). */
+.rack-dashboard-board {
+    min-height: 120px;
+    display: grid;
+    grid-template-columns: repeat(var(--rack-active-columns, 6), minmax(0, 1fr));
+    grid-auto-flow: row;
+    gap: 8px;
+    width: 100%;
+    align-items: stretch;
+    align-content: start;
+}
+
+.rack-dashboard-slot.is-empty:hover {
+    background: light-dark(#d9dfe4, #282d31);
+    border-color: var(--border-strong);
+}
+
+.rack-dashboard-slot.is-drop-target {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 2px rgba(79, 134, 223, .28);
+}
+
+.rack-dashboard-empty-slot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: var(--text-muted);
+    pointer-events: none;
+    user-select: none;
+}
+
+.rack-dashboard-slot.is-occupied .rack-dashboard-empty-slot {
+    display: none;
+}
+
+.rack-dashboard-slot-number {
+    position: absolute;
+    top: 7px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: 5px;
+    background: light-dark(rgba(255,255,255,.55), rgba(27, 27, 27, 0.55));
+    border: 1px solid light-dark(rgba(112,124,136,.25), rgba(112, 124, 136, 0.25));
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.rack-dashboard-empty-slot-text {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+.rack-dashboard-card.is-dragging {
+    border-color: #5a8fe6;
+    opacity: .45;
+    box-shadow: 0 6px 18px rgba(22,34,46,.24);
+}
+
+.rack-dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    min-height: 30px;
+    padding: 4px 5px;
+    gap: 4px;
+}
+
+.rack-dashboard-drag-handle {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    gap: 4px;
+}
+
+.rack-dashboard-grip {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    line-height: 1;
+    transform: rotate(90deg);
+    font-size: 11px;
+    letter-spacing: -2px;
+}
+
+.rack-dashboard-card-title strong {
+    display: block;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 10px;
+    line-height: 1.1;
+}
+
+.rack-dashboard-card-title span {
+    color: var(--text-muted);
+    display: block;
+    margin-top: 1px;
+    font-size: 7px;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rack-local-side-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 2px;
+}
+
+.rack-local-side-toggle button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    font-weight: 700;
+    cursor: pointer;
+    min-width: 23px;
+    height: 22px;
+    padding: 0 4px;
+    font-size: 8px;
+    border-radius: 4px;
+}
+
+.rack-preview-scale {
+    display: block;
+    width: max-content;
+    height: auto;
+    margin: 0 auto !important;
+    transform: none !important;
+    transform-origin: top center;
+}
+
+.rack-dashboard-page .rack-viewport {
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.rack-dashboard-page .rack-visual-shell {
+    padding: 0 30px;
+}
+
+/* Keep one consistent natural rack size; JS scales this complete component. */
+.rack-dashboard-page .rack-frame {
+    width: max-content;
+    min-width: 850px;
+}
+
+.rack-dashboard-page .rack-port {
+    cursor: default;
+}
+
+body.rack-dashboard-drag-active,
+body.rack-dashboard-drag-active * {
+    cursor: grabbing !important;
+    user-select: none !important;
+}
+
+@media (max-width: 1199px) {
+    .rack-dashboard-slot {
+        min-height: clamp(520px, 72vw, 760px);
+    }
+}
+
+@media (max-width: 720px) {
+    .rack-dashboard-board {
+        gap: 6px;
+    }
+
+    .rack-dashboard-empty-slot-text,
+    .rack-dashboard-card-title span {
+        display: none;
+    }
+}
+
+/* ============================================================
+   Rack View read-only controls + row-preserving compact mode v19.6
+   ============================================================ */
+
+.rack-dashboard-toggle-empty {
+    padding: 7px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rack-dashboard-toggle-empty:hover {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+}
+
+.rack-dashboard-toggle-empty[aria-pressed="true"] {
+    background: var(--accent-soft);
+    border-color: light-dark(#8fb6f4, #2e466d);
+    color: var(--accent-text);
+}
+
+.rack-view-readonly-warning {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid #e4b65d;
+    border-radius: 7px;
+    background: var(--warn-soft);
+    color: var(--warn-text);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.rack-view-readonly-warning a {
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.rack-view-readonly-warning a:hover {
+    text-decoration: underline;
+}
+
+/* Hidden until rack_view.js has zoomed the racks (no jump from their
+   natural size on load); shown after 3 s anyway, should the script fail. */
+.rack-dashboard-board:not(.is-laid-out) {
+    visibility: hidden;
+    animation: rack-board-reveal 0s 3s forwards;
+}
+
+@keyframes rack-board-reveal {
+    to {
+        visibility: visible;
+    }
+}
+
+.rack-dashboard-board.hide-empty-slots .rack-dashboard-slot.is-empty {
+    display: none;
+}
+
+/* In compact mode JavaScript preserves the original row membership. It keeps
+   just enough grey fillers in the shorter row to match the longest row. */
+.rack-dashboard-board.hide-empty-slots .rack-dashboard-slot.is-empty.compact-visible-empty {
+    display: block;
+}
+
+.rack-dashboard-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+}
+
+.rack-dashboard-close-detail {
+    display: none;
+    padding: 4px 8px;
+    border: 1px solid #7d8994;
+    border-radius: 5px;
+    background: #26313c;
+    color: #e7edf2;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rack-dashboard-close-detail:hover {
+    background: #35424f;
+    border-color: #a4b0ba;
+}
+
+.rack-dashboard-card-body[data-rack-open-detail] {
+    cursor: zoom-in;
+}
+
+.rack-detail-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    /* No backdrop-filter: blurring the whole page made every hover on the
+       opened rack redraw the full screen. */
+    background: rgba(7, 12, 18, .8);
+}
+
+body.rack-view-detail-open {
+    overflow: hidden;
+}
+
+body.rack-view-detail-open .rack-detail-backdrop {
+    display: block;
+}
+
+.rack-dashboard-card.is-expanded {
+    position: fixed;
+    /* As tall as the rack, at most the window: a short rack leaves no empty
+       area below it; a tall one scrolls inside. */
+    inset: 18px 18px auto;
+    z-index: 10000;
+    width: auto;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    max-height: calc(100vh - 36px);
+    border-color: #5b6b78;
+    border-radius: 10px;
+    background: var(--surface-3);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-drag-handle {
+    cursor: default;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-grip {
+    display: none;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-title strong {
+    font-size: 18px;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-title span {
+    display: inline;
+    font-size: 12px;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-close-detail {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* In the detailed read-only view, the rack is allowed to render at its natural
+   1:1 size whenever the window is wide enough. */
+.rack-dashboard-card.is-expanded .rack-frame {
+    min-width: 850px;
+}
+
+@media (max-width: 720px) {
+    .rack-dashboard-card.is-expanded {
+        inset: 6px 6px auto;
+    }
+}
+
+/* ============================================================
+   Rack View equal row height v19.7
+   - A visual row is as tall as the tallest rack in that row.
+   - Occupied cards stretch to that row height, so the grey slot
+     background is not visible below shorter rack previews.
+   - Empty slots still stretch to the same row height and remain grey.
+   ============================================================ */
+
+/* The old 500-740px minimum forced large grey areas below racks that
+   rendered shorter after zoom. Let CSS Grid derive each row height from
+   the tallest occupied rack instead. Keep only a small minimum so a fully
+   empty row is still usable as a drag target. */
+.rack-dashboard-slot {
+    min-width: 0;
+    box-sizing: border-box;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface-3);
+    overflow: hidden;
+    transition: border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    min-height: 120px;
+    display: flex;
+    align-items: stretch;
+}
+
+/* An occupied position should visually belong to the rack, not to the grey
+   placeholder behind it. The card fills the complete grid-row height. */
+.rack-dashboard-slot.is-occupied {
+    background: #151d25;
+    border-color: light-dark(rgba(93, 108, 122, .45), rgba(93, 108, 122, 0.45));
+}
+
+.rack-dashboard-card {
+    transition: box-shadow .12s ease, border-color .12s ease, opacity .12s ease;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    border-radius: 7px;
+    background: var(--surface);
+    box-shadow: 0 1px 4px rgba(22, 34, 46, .12);
+    overflow: hidden;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rack-dashboard-card-body {
+    min-width: 0;
+    padding: 3px;
+    background: #151d25;
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rack-dashboard-side:not([hidden]) {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rack-preview-stage {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    background: #111820;
+    border-radius: 5px;
+    flex: 1 1 auto;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+    .rack-dashboard-slot {
+        min-height: 100px;
+    }
+
+    .rack-dashboard-card.is-expanded {
+        max-height: calc(100vh - 12px);
+    }
+}
+
+
+/* ============================================================
+   Rack View full-height rack units v19.9
+   - Preserve each U row's natural content height.
+   - JS only adds extra height to shorter racks; it never forces a populated
+     U to be smaller than the ports/labels inside it.
+   - Device faces expand with the U while their content keeps the normal
+     top-aligned physical layout.
+   - Rack Change remains at the normal editing geometry.
+   ============================================================ */
+
+.rack-dashboard-page .rack-row {
+    width: 100%;
+    min-width: 100%;
+    min-height: var(--rack-view-row-height, 58px);
+    height: auto;
+}
+
+.rack-dashboard-page .rack-slot {
+    min-height: 0;
+    height: 100%;
+    align-items: stretch;
+}
+
+.rack-dashboard-page .rack-empty-slot {
+    height: auto;
+    min-height: calc(var(--rack-view-row-height, 58px) - 10px);
+    flex: 1 1 auto;
+}
+
+/* A normal 1U face fills the enlarged row, but min-height (not fixed height)
+   means the ports can still make the row naturally taller when needed. */
+.rack-dashboard-page .rack-slot > .rack-device:not(.c4900m-rack-device):not(.switch-placeholder-device):not(.server-device) {
+    height: auto;
+    min-height: calc(var(--rack-view-row-height, 58px) - 10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.rack-dashboard-page .rack-slot > .rack-device:not(.c4900m-rack-device):not(.switch-placeholder-device):not(.server-device) .rack-device-header {
+    flex: 0 0 auto;
+    margin-bottom: 5px;
+}
+
+.rack-dashboard-page .rack-switch-port-matrix,
+.rack-dashboard-page .rack-patch-ports,
+.rack-dashboard-page .cable-organizer-body {
+    flex: 0 0 auto;
+    margin-top: 0;
+}
+
+/* Multi-U faces receive the exact sum of the U rows they span from JS.
+   Use min-height so large physical faces can never clip their own content. */
+.rack-dashboard-page .c4900m-rack-device,
+.rack-dashboard-page .switch-placeholder-device {
+    height: auto !important;
+    min-height: calc(var(--rack-view-device-height, 116px) - 10px) !important;
+}
+
+.rack-dashboard-page .server-device {
+    height: auto !important;
+    min-height: calc(var(--rack-view-device-height, 58px) - 6px) !important;
+}
+
+/* Keep server/placeholder content in its normal face layout. In particular,
+   do not let a larger U push labels or ports into neighbouring rows. */
+.rack-dashboard-page .switch-placeholder-device .rack-device-header,
+.rack-dashboard-page .server-device .rack-device-header,
+.rack-dashboard-page .c4900m-rack-device .rack-device-header {
+    flex: 0 0 auto;
+}
+
+/* Detailed single-rack view is always the natural 1:1 rack geometry. */
+.rack-dashboard-card.is-expanded .rack-row {
+    --rack-view-row-height: 58px !important;
+    height: auto;
+}
+
+.rack-dashboard-card.is-expanded .c4900m-rack-device,
+.rack-dashboard-card.is-expanded .switch-placeholder-device,
+.rack-dashboard-card.is-expanded .server-device {
+    --rack-view-device-height: initial;
+}
+
+/* ============================================================
+   v19.12 - Expanded Rack View scroll viewport
+   Keep the detail header fixed and make the rack body the actual
+   scroll container. This avoids relying on the browser/body scrollbar,
+   which is intentionally disabled while the detail view is open.
+   ============================================================ */
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: 46px;
+    padding: 8px 12px;
+    background: var(--surface-3);
+    border-bottom: 1px solid light-dark(#b8c1c9, #494e53);
+    flex: 0 0 auto;
+}
+
+
+/* Keep scrollbars clearly visible in Chromium/WebKit. */
+.rack-dashboard-card.is-expanded .rack-dashboard-card-body::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-body::-webkit-scrollbar-track {
+    background: light-dark(#d8dde2, #2a2d31);
+    border-radius: 8px;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-body::-webkit-scrollbar-thumb {
+    background: #7b8792;
+    border: 2px solid light-dark(#d8dde2, #3f4449);
+    border-radius: 8px;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-card-body::-webkit-scrollbar-thumb:hover {
+    background: #606b75;
+}
+
+/* Firefox. */
+
+
+/* ============================================================
+   v19.13 - Make expanded Rack View a real scroll viewport
+   The previous version showed scrollbar tracks, but the flex children were
+   allowed to shrink to the viewport height, so the scroll container had no
+   actual overflow and the thumbs could not move.
+   ============================================================ */
+.rack-dashboard-card.is-expanded .rack-dashboard-card-body {
+    padding: 16px;
+    cursor: default;
+    flex: 1 1 auto;
+    overscroll-behavior: contain;
+    scrollbar-width: auto;
+    scrollbar-color: #7b8792 #d8dde2;
+    display: block;
+    overflow: auto;
+    min-height: 0;
+    min-width: 0;
+    height: 100%;
+    scrollbar-gutter: stable both-edges;
+}
+
+.rack-dashboard-card.is-expanded .rack-dashboard-side:not([hidden]) {
+    display: block !important;
+    flex: none !important;
+    min-height: max-content !important;
+    height: max-content !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+.rack-dashboard-card.is-expanded .rack-preview-stage {
+    max-width: none !important;
+    box-sizing: border-box;
+    display: block !important;
+    flex: none !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    height: max-content !important;
+    min-height: max-content !important;
+    overflow: visible !important;
+    padding: 14px 18px !important;
+}
+
+.rack-dashboard-card.is-expanded .rack-preview-scale {
+    display: block !important;
+    flex: none !important;
+    width: max-content !important;
+    height: max-content !important;
+    min-height: max-content !important;
+    margin: 0 auto !important;
+    /* Natural size unless the zoom buttons of the opened rack change it. */
+    zoom: var(--rack-detail-zoom, 1) !important;
+}
+
+.rack-dashboard-card.is-expanded .rack-visual-shell,
+.rack-dashboard-card.is-expanded .rack-frame {
+    height: max-content !important;
+}
+
+/* ============================================================
+   v19.14 - Preserve multi-U server height in expanded Rack View
+   v19.13 correctly made the detail view scrollable, but v19.9's expanded
+   reset left --rack-view-device-height unset while .server-device still had
+   height:auto !important. As a result every server collapsed to its content
+   height and visually looked like 1U. Use the physical --rack-device-units
+   value embedded by rack_component.html for the 1:1 expanded view.
+   ============================================================ */
+.rack-dashboard-card.is-expanded .server-device {
+    height: calc((var(--rack-device-units, 1) * 58px) - 6px) !important;
+    min-height: calc((var(--rack-device-units, 1) * 58px) - 6px) !important;
+    max-height: none !important;
+}
+
+/* Keep the other absolute multi-U rack faces on the same physical 58px/U
+   geometry while the expanded view is rendered at zoom: 1. */
+.rack-dashboard-card.is-expanded .switch-placeholder-device,
+.rack-dashboard-card.is-expanded .c4900m-rack-device {
+    height: calc((var(--rack-device-units, 1) * 58px) - 10px) !important;
+    min-height: calc((var(--rack-device-units, 1) * 58px) - 10px) !important;
+    max-height: none !important;
+}
+
+
+/* ============================================================
+   v19.15 - Wider cable lanes in expanded Rack View
+   Compact board cards keep their existing geometry. The expanded
+   single-rack detail gets a wider left/right gutter so up to 18
+   cable trunks per side can be visibly separated.
+   Not on phones: there the gutter only pushes the rack off the screen.
+   ============================================================ */
+@media (min-width: 721px) {
+    .rack-dashboard-card.is-expanded .rack-visual-shell {
+        padding-left: 125px !important;
+        padding-right: 125px !important;
+    }
+}
+
+
+/* ============================================================
+   v19.19 - Temporary switch overlap fix in Rack View
+   Temporary placeholders are absolutely positioned multi-U faces.
+   Their content must fit inside the U span; allowing height:auto made
+   a 1U / 48-port placeholder grow into the U below it.
+   ============================================================ */
+
+/* Use the exact span calculated by Rack View JS. The inline custom property
+   falls back to height_units * 58px in expanded/natural mode. */
+.rack-dashboard-page .switch-placeholder-device {
+    height: var(--rack-placeholder-height) !important;
+    min-height: var(--rack-placeholder-height) !important;
+    max-height: var(--rack-placeholder-height) !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
+}
+
+/* A 1U temporary switch is laid out like an SNMP switch (two rows of
+   normal-size ports, rack-devices.css): it takes the height it needs, like
+   a switch row, instead of squeezing the ports into one fixed U. */
+.rack-dashboard-page .rack-device.switch-placeholder-device.switch-placeholder-device-1u,
+.rack-dashboard-card.is-expanded .rack-device.switch-placeholder-device.switch-placeholder-device-1u {
+    height: auto !important;
+    min-height: calc(var(--rack-view-row-height, 58px) - 10px) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 6px 8px 19px !important;
+}
+
+.rack-dashboard-page .switch-placeholder-device-1u .rack-device-header {
+    padding-right: 0;
+}
+
+/* In read-only Rack View there is no Remove form, but explicitly keep it from
+   consuming layout if a future component version renders actions here. */
+.rack-dashboard-page .switch-placeholder-device-1u .rack-remove-form {
+    display: none;
+}
+
+
+/* ============================================================
+   Zoom buttons of the opened rack (− / % / + / Fit), shown only in
+   the expanded view next to F / R and Close.
+   ============================================================ */
+.rack-detail-zoom {
+    display: none;
+    gap: 3px;
+    margin-right: 6px;
+}
+
+.rack-dashboard-card.is-expanded .rack-detail-zoom {
+    display: inline-flex;
+}
+
+.rack-detail-zoom button {
+    min-width: 28px;
+    padding: 4px 7px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.1;
+    cursor: pointer;
+}
+
+.rack-detail-zoom button:hover {
+    background: var(--surface-3);
+    border-color: var(--border-strong);
+}
+
+.rack-detail-zoom .rack-detail-zoom-level {
+    min-width: 50px;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+    .rack-dashboard-card.is-expanded .rack-dashboard-card-header {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    .rack-detail-zoom {
+        margin-right: 2px;
+    }
+
+    .rack-detail-zoom button {
+        min-width: 32px;
+        padding: 6px 7px;
+    }
+}
+
+
+/* A narrower rack (racks.width_percent): its position on the board is
+   narrower too, at the start of its grid cell (the header keeps room for
+   the name and the F / R buttons). js/rack_view.js keeps the board scale. */
+.rack-dashboard-board .rack-dashboard-slot.is-narrow {
+    justify-self: start;
+    width: max(150px, calc(100% * var(--rack-slot-share, 1) + 24px));
+}
+
+.rack-dashboard-slot.is-narrow .rack-dashboard-card:not(.is-expanded) .rack-dashboard-card-title span,
+.rack-dashboard-slot.is-narrow .rack-dashboard-card:not(.is-expanded) .rack-dashboard-grip {
+    display: none;
+}

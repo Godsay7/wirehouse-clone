@@ -1,0 +1,233 @@
+{# Search form and Port Details table. #}
+{% from "switch/_macros.html" import error_parts %}
+<div class="section-header port-details-header">
+    <h2>{{ _("Port Details") }}</h2>
+</div>
+
+<form
+    method="get"
+    class="search-form"
+    data-live-search
+    hx-get="{{ url_for('switches.view', switch_id=switch.id) }}"
+    hx-trigger="submit, input delay:400ms from:find input"
+    hx-target="#switch-live-table"
+    hx-select="#switch-live-table"
+    hx-swap="outerHTML"
+    hx-push-url="true"
+>
+    <input
+        type="text"
+        name="search"
+        value="{{ search }}"
+        placeholder="{{ _("Search port, device, MAC, IP or hostname...") }}"
+        class="search-input"
+    >
+
+    <button type="submit" class="button">
+        {{ _("Search") }}
+    </button>
+
+    <a href="{{ url_for('switches.view', switch_id=switch.id) }}"
+       class="button secondary"
+       data-search-clear>
+        {{ _("Clear") }}
+    </a>
+</form>
+
+<div
+    id="switch-live-table"
+    hx-get="{{ request.full_path }}"
+    hx-trigger="inventory-changed from:body"
+    hx-select="#switch-live-table"
+    hx-swap="outerHTML"
+>
+<div class="table-wrapper">
+    <table class="data-table port-details-table">
+        <thead>
+            <tr>
+                <th>{{ _("Port") }}</th>
+                <th>{{ _("Device") }}</th>
+                <th>{{ _("Neighbour") }}</th>
+                <th>{{ _("IP Address") }}</th>
+                <th>{{ _("Hostname") }}</th>
+                <th>{{ _("Speed") }}</th>
+                <th>{{ _("Link") }}</th>
+                <th>VLAN</th>
+                <th>{{ _("MAC Address") }}</th>
+                <th>{{ _("Interface") }}</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for port in ports %}
+                <tr>
+                    <td><a class="port-history-link" href="{{ url_for('switches.port_history', switch_id=switch.id, port=port.port) }}"
+                           title="{{ _("Port history") }}">{{ port.port }}</a></td>
+
+                    <td>
+                        {{ port.device or "-" }}
+                    </td>
+
+                    <td class="neighbor" title="{{ _("Seen by LLDP / CDP") }}">
+                        {% for label in port.neighbors %}
+                            <div>{{ label }}</div>
+                        {% else %}
+                            -
+                        {% endfor %}
+                    </td>
+
+                    <td class="ip-address">
+                        {% if port.ips %}
+
+                            {% if port.ips|length > 2 %}
+                                <span
+                                    class="many-ips"
+                                    title="{{ port.ips | join(', ') }}"
+                                >
+                                    {{ _("Many IPs ({n})", n=port.ips|length) }}
+                                </span>
+                            {% else %}
+                                {% for ip in port.ips %}
+                                    <div>{{ ip }}</div>
+                                {% endfor %}
+                            {% endif %}
+
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="hostname-cell">
+                        {# The documented device's name written on this port (Cabling Check). #}
+                        {% set port_edit_title = _("Type the name of port {port}", port=port.if_name or port.port) %}
+                        {% if port.written %}
+                            <div class="written-name">
+                                <span class="written-name-text">{{ port.written.name }}</span>
+                                {% if port.written.manual %}
+                                    <span class="written-status is-manual" title="{{ _("Typed in by hand for this port") }}">{{ _("typed in by hand") }}</span>
+                                {% elif port.written.confirmed %}
+                                    <span class="written-status is-confirmed" title="{{ _("The collector has seen this device ({mac}) on this port", mac=port.written.mac) }}">{{ _("confirmed") }}</span>
+                                {% else %}
+                                    <span class="written-status is-unverified" title="{{ _("Not seen on this port yet ({mac}): confirmed automatically when the device is switched on", mac=port.written.mac) }}">{{ _("not verified") }}</span>
+                                {% endif %}
+                                <button type="button" class="host-edit" data-port-edit data-requires-login data-switch-id="{{ port.switch_id }}" data-port="{{ port.port }}"
+                                        data-name="{{ port.written.name }}" title="{{ port_edit_title }}" aria-label="{{ port_edit_title }}">✎</button>
+                            </div>
+                        {% endif %}
+                        {% if port.last_known %}
+                            {# No device right now (link down): the last one seen here. #}
+                            {% if port.last_known.name and not (port.written and port.written.name == port.last_known.name) %}
+                                <div class="last-known-value">{{ port.last_known.name }}</div>
+                            {% endif %}
+                            <div class="last-known-note" title="{{ _("The port shows no device now; this is what was seen on it last") }}">{{ _("Last known data") }}{% if port.last_known.at %} · {{ format_datetime(port.last_known.at)[:16] }}{% endif %}</div>
+                        {% elif port.devices %}
+                            {# One line per device; the pencil types its hostname in by hand. #}
+                            {% for device in port.devices %}
+                                <div class="host-row">
+                                    {% if device.source == "manual" %}
+                                        <span class="manual-name" title="{{ _("Typed in by hand") }}">{{ device.name }}</span>
+                                    {% elif device.source == "doc" %}
+                                        <span class="doc-name" title="{{ _("From the documentation: DNS has no name for this address") }}">{{ device.name }}</span>
+                                    {% else %}
+                                        {{ device.name or "-" }}
+                                    {% endif %}
+                                    <button type="button" class="host-edit" data-host-edit data-requires-login data-mac="{{ device.mac }}"
+                                            data-name="{{ device.name if device.source == 'manual' else '' }}" data-suggest="{{ device.name }}"
+                                            title="{{ _("Type the hostname of {mac}", mac=device.mac) }}" aria-label="{{ _("Type the hostname of {mac}", mac=device.mac) }}">✎</button>
+                                </div>
+                            {% endfor %}
+                        {% elif port.manual_names or port.hostnames %}
+                            {% for name in port.manual_names %}
+                                <div class="manual-name" title="{{ _("Typed in by hand") }}">{{ name }}</div>
+                            {% endfor %}
+                            {% for hostname in port.hostnames if hostname not in port.manual_names %}
+                                <div>{{ hostname }}</div>
+                            {% endfor %}
+                        {% elif port.doc_names %}
+                            {% for name in port.doc_names %}
+                                <div class="doc-name" title="{{ _("From the documentation: DNS has no name for this address") }}">{{ name }}</div>
+                            {% endfor %}
+                        {% elif not port.written %}
+                            -
+                        {% endif %}
+                        {% if not port.written and not port.devices %}
+                            {# No single device to name (port empty or an uplink): name the port. #}
+                            <button type="button" class="host-edit host-edit-port" data-port-edit data-requires-login data-switch-id="{{ port.switch_id }}" data-port="{{ port.port }}"
+                                    data-name="{{ (port.last_known.name if port.last_known else '') or '' }}" title="{{ port_edit_title }}" aria-label="{{ port_edit_title }}">✎</button>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ port.speed or "-" }}
+                    </td>
+
+                    <td>
+                        {% if port.link == "UP" %}
+                            <span class="status-badge status-up">UP</span>
+                        {% elif port.link == "DOWN" %}
+                            <span class="status-badge status-down">DOWN</span>
+                        {% else %}
+                            <span class="status-badge status-unknown">-</span>
+                        {% endif %}
+                        {% if port.errors %}
+                            <span class="port-errors-badge"
+                                  title="{{ _("Error counters grew in the last {n} h", n=error_window_hours) }}: {{ error_parts(port.errors) }}">
+                                {{ _("errors") }} {{ port.errors.total }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td class="vlan-cell">
+                        {% if port.vlan_mode == "trunk" %}
+                            <span class="vlan-trunk" title="{{ port.vlan_text }}">trunk</span>
+                            <span class="vlan-native">{{ port.vlan or "—" }}</span>
+                            {% if port.vlan_tagged %}<div class="vlan-tagged" title="{{ port.vlan_tagged }}">{{ port.vlan_tagged | replace(",", ", ") | replace("-", "‑") }}</div>{% endif %}
+                        {% elif port.vlan %}
+                            {{ port.vlan }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="mac">
+                        {% if port.mac_list %}
+
+                            {% if port.mac_list|length > 2 %}
+                                <span
+                                    class="many-macs"
+                                    title="{{ port.mac_list | join(', ') }}"
+                                >
+                                    {{ _("Many MACs ({n})", n=port.mac_list|length) }}
+                                </span>
+                            {% else %}
+                                {% for mac in port.mac_list %}
+                                    <div>{{ mac }}</div>
+                                {% endfor %}
+                            {% endif %}
+
+                        {% elif port.last_known %}
+                            <div class="last-known-value">{{ port.last_known.mac }}</div>
+                            <div class="last-known-note">{{ _("Last known data") }}</div>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ port.if_name or "-" }}
+                    </td>
+                </tr>
+
+            {% else %}
+                <tr>
+                    <td colspan="10" class="empty-table">
+                        {{ _("No ports found.") }}
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+</div>

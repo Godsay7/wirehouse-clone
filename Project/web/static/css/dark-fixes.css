@@ -1,0 +1,94 @@
+/* Dark theme: corrections by hand, which the colour rules of
+   scripts/theme_colors.py cannot guess. Loaded on every page, last. */
+
+/* No band of another colour under short pages. */
+html[data-theme="dark"] {
+    background: var(--bg);        /* the same as body: no band under short pages */
+}
+
+/* ---------- The theme button (both themes) ---------- */
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 27px;
+    margin-left: 8px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.theme-toggle .theme-icon-sun,
+html[data-theme="dark"] .theme-toggle .theme-icon-moon {
+    display: none;
+}
+
+html[data-theme="dark"] .theme-toggle .theme-icon-sun {
+    display: block;
+}
+
+/* ---------- Corrections found by the contrast check (WCAG AA) ---------- */
+
+
+
+
+
+/* Floor Maps: outlines that mark a workplace (hover, found by search) are
+   near black in the light theme; on the dark map they must be light. */
+html[data-theme="dark"] .fm-workplace-shape {
+    stroke: rgba(226, 232, 240, 0.35);
+}
+
+
+
+/* Drop-down menus in the header: a line around them, the page is as dark as they are. */
+html[data-theme="dark"] .main-nav .nav-menu::before {
+    border: 1px solid var(--border);
+}
+
+/* Fibre (violet) and SDI (amber) accents. The colour rules
+   (scripts/theme_colors.py) darken light border and outline colours; an accent
+   must stay bright on the dark page, or a lit fibre port or cable looks dark.
+   Light theme values, restored. */
+html[data-theme="dark"] .rack-port.connected-fiber {
+    border-color: #a78bfa;
+}
+
+html[data-theme="dark"] .rack-port.connected-fiber.connection-highlight {
+    outline-color: #c4b5fd;
+}
+
+html[data-theme="dark"] .connection-path.connection-fiber {
+    stroke: rgba(167, 139, 250, 0.72);
+}
+
+html[data-theme="dark"] .connection-path.connection-fiber.connection-highlight {
+    stroke: #c4b5fd;
+}
+
+html[data-theme="dark"] .rv-port-menu-action {
+    border: 1px solid #a78bfa;
+}
+
+html[data-theme="dark"] .cable-path-node-odf,
+html[data-theme="dark"] .cable-path-cord-fiber {
+    border-left-color: #a78bfa;
+}
+
+/* While the theme switches (js/theme.js), no transitions: every colour changes at once. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: none !important;
+}

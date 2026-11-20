@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Cabling Check") }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checks.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{% macro sw(p) -%}
+{% if p.switch_id %}<a href="{{ url_for('switches.view', switch_id=p.switch_id) }}">{{ p.host }}</a>{% else %}{{ p.host }}{% endif %}
+<span class="check-port">{{ p.if_name }}</span>
+{%- endmacro %}
+
+{# A row opens where its switch port is documented: Rack Change at that port,
+   or the switch page at that port if the switch is not mounted (js/row_links.js). #}
+{# One-click fix (bll/services/cabling_check.py): the button carries what to do as JSON. #}
+{% macro fix_button(fix) -%}
+{% if fix %}<button type="button" class="button check-fix check-fix-{{ fix.kind }}" data-requires-login data-fix="{{ fix | tojson | forceescape }}"
+        title="{{ fix.label | tr }}">{{ _({'add': 'Add cable', 'complete': 'Complete path', 'recable': 'Re-cable'}[fix.kind]) }}</button>{% endif %}
+{%- endmacro %}
+
+{# "What can be done": a short guide above a section. #}
+{% macro how_to(lines) -%}
+<details class="check-howto">
+    <summary>{{ _("What can be done") }}</summary>
+    <ul>{% for line in lines %}<li>{{ line }}</li>{% endfor %}</ul>
+</details>
+{%- endmacro %}
+
+{# What the fix button will do, shown under the documentation it changes. #}
+{% macro fix_note(fix) -%}
+{% if fix and fix.kind != 'add' %}<div class="check-fix-what">{{ _("Fix:") }} {{ fix.label | tr }}</div>{% endif %}
+{%- endmacro %}
+
+{% macro row_attrs(p, extra='') -%}
+{% if p.rack_id %}{% set url = rack_url(p.rack_id, p.side, 'switch-%s-port-%s' % (p.switch_id, p.port)) %}
+{% elif p.switch_id %}{% set url = url_for('switches.view', switch_id=p.switch_id, search=p.if_name) %}
+{% else %}{% set url = '' %}{% endif -%}
+class="{{ extra }}{{ ' row-link' if url }}"{% if url %} data-href="{{ url }}" title="{{ _('Open in the rack') if p.rack_id else _('Open the switch') }}"{% endif %}
+{%- endmacro %}
+
+{% block content %}
+
+<div class="checks-header">
+    <div>
+        <h1>{{ _("Cabling Check") }}</h1>
+        <p class="checks-lead">
+            {{ _("What the switches report (LLDP/CDP neighbours, port descriptions, link state) compared with the cabling documented in Rack Change. Updated with every poll.") }}
+        </p>
+    </div>
+    {# The cable journal: only for signed-in users (blueprints/checks.py). #}
+    {% if can_edit %}
+    <div class="checks-export">
+        {{ _("Cable journal:") }}
+        <a class="button" href="{{ url_for('checks.cable_journal', fmt='xlsx') }}">Excel</a>
+        <a class="button secondary" href="{{ url_for('checks.cable_journal', fmt='csv') }}">CSV</a>
+    </div>
+    {% endif %}
+</div>
+
+<div id="checks-live" hx-get="{{ url_for('checks.index') }}" hx-trigger="inventory-changed from:body, rack-changed from:body"
+     hx-select="#checks-live" hx-swap="outerHTML">
+{% include "_versions.html" %}
+
+<div class="stats">
+    <a class="stat {{ 'is-bad' if summary.neighbor_mismatch else 'is-good' }}" href="#links">
+        <span class="stat-label">{{ _("switch links differ") }}</span><b class="stat-value">{{ summary.neighbor_mismatch }}</b>
+    </a>
+    <a class="stat {{ 'is-warn' if summary.neighbor_missing else 'is-good' }}" href="#links">
+        <span class="stat-label">{{ _("switch links not documented") }}</span><b class="stat-value">{{ summary.neighbor_missing }}</b>
+    </a>
+    <a class="stat {{ 'is-warn' if summary.alias else 'is-good' }}" href="#aliases">
+        <span class="stat-label">{{ _("port descriptions disagree") }}</span><b class="stat-value">{{ summary.alias }}</b>
+    </a>
+    <a class="stat is-info" href="#changed">
+        <span class="stat-label">{{ _("ports with another device") }}</span><b class="stat-value">{{ summary.device_changed }}</b>
+    </a>
+</div>
+
+{# ------------------------------------------------------------------ #}
+<section class="check-section" id="links">
+    <h2>{{ _("Switch-to-switch links") }} <small>LLDP / CDP</small></h2>
+    {% if not summary.neighbors_collected %}
+    <p class="check-empty">{{ _("No LLDP/CDP data yet — it appears after the next collector run.") }}</p>
+    {% else %}
+    {% set problems = neighbor_links | rejectattr("status", "equalto", "ok") | list %}
+    {% if problems %}
+    {{ how_to([
+        _("Differs: the switch sees another neighbour than the documented cable. If the switch is right, “Re-cable” moves the documentation; if the documentation is right, the patch cord in the rack is in the wrong port."),
+        _("Not documented: “Add cable” documents the link the switch reports; “Complete path” connects the last free patch port of a documented path."),
+        _("Click a row to open the port in Rack Change and fix it by hand."),
+    ]) }}
+    <div class="table-container">
+    <table class="check-table">
+        <thead><tr><th>{{ _("Status") }}</th><th>{{ _("Port") }}</th><th>{{ _("Switch sees") }}</th><th>{{ _("Documented") }}</th><th></th></tr></thead>
+        <tbody>
+        {% for x in problems %}
+        <tr {{ row_attrs(x.local, "row-" ~ x.status) }}>
+            <td><span class="check-badge badge-{{ x.status }}">{{ _("Differs") if x.status == "mismatch" else _("Not documented") }}</span>
+                <span class="check-proto">{{ x.protocol }}</span></td>
+            <td>{{ sw(x.local) }}</td>
+            <td>{{ sw(x.remote) }}</td>
+            <td>{{ (x.documented | tr) or "—" }}
+                {% if x.remote_documented %}<div class="check-sub">{{ _("other side:") }} {{ x.remote_documented | tr }}</div>{% endif %}
+                {{ fix_note(x.fix) }}</td>
+            <td class="check-fix-cell">{{ fix_button(x.fix) }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="check-empty">{{ _("Every link the switches report matches the documentation.") }}</p>
+    {% endif %}
+
+    {% if unconfirmed %}
+    <details class="check-details" open>
+        <summary>{{ _n("{n} documented link the switches don't report", "{n} documented links the switches don't report", unconfirmed | length) }}</summary>
+        {{ how_to([
+            _("LLDP / CDP may be switched off on one side (often on servers and Dante switches) — then nothing is wrong."),
+            _("If the cable is really not there any more, remove it in Rack Change (click the row)."),
+        ]) }}
+        <table class="check-table compact">
+            <tbody>
+            {% for x in unconfirmed %}
+            <tr {{ row_attrs(x.local) }}><td>{{ sw(x.local) }}</td><td>{{ x.documented | tr }}</td><td>{{ x.link }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </details>
+    {% endif %}
+    {% endif %}
+</section>
+
+{# ------------------------------------------------------------------ #}
+<section class="check-section" id="aliases">
+    <h2>{{ _("Port descriptions naming another switch") }} <small>{{ _("ifAlias") }}</small></h2>
+    {% if alias_checks %}
+    {{ how_to([
+        _("The description on the switch names another switch than the documented cable."),
+        _("If the description is right, the documentation is wrong: connect the right cable in Rack Change (click the row)."),
+        _("If the documentation is right, the description on the switch is outdated — change it on the switch."),
+    ]) }}
+    <table class="check-table">
+        <thead><tr><th>{{ _("Port") }}</th><th>{{ _("Description on the switch") }}</th><th>{{ _("Actually") }}</th></tr></thead>
+        <tbody>
+        {% for x in alias_checks %}
+        <tr {{ row_attrs(x.local) }}><td>{{ sw(x.local) }}</td><td>{{ x.alias }}</td><td>{{ x.documented | tr }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="check-empty">{{ _("No contradictions.") }}</p>
+    {% endif %}
+</section>
+
+{# ------------------------------------------------------------------ #}
+{# The collector saw one device on the port and later another one there
+   (port_device_changes, bll/domain/cabling_check.device_replaced). #}
+<section class="check-section" id="changed">
+    <h2>{{ _("Another device on the port") }} <small>{{ _("MAC address tables, last {n} days", n=summary.device_change_days) if summary.device_change_days else _("MAC address tables") }}</small></h2>
+    {% if device_changes %}
+    {{ how_to([
+        _("One device worked on the port, and later the switch saw another one there instead. A device that only went to sleep and came back is not listed."),
+        _("Each port is listed once, with its latest change; “changes” shows how many there were. Ports with many devices (uplinks) and trunk ports are not watched."),
+        _("Click a row to open the switch at that port."),
+    ]) }}
+    <div class="table-container">
+    <table class="check-table">
+        <thead><tr><th>{{ _("Port") }}</th><th>{{ _("Was") }}</th><th>{{ _("Became") }}</th><th>{{ _("When") }}</th></tr></thead>
+        <tbody>
+        {% for x in device_changes %}
+        {% set url = url_for('switches.view', switch_id=x.local.switch_id, search=x.local.if_name) %}
+        <tr class="row-link" data-href="{{ url }}" title="{{ _('Open the switch') }}">
+            <td class="nowrap">{{ sw(x.local) }}</td>
+            <td>{% for d in x.old %}<div>{{ d.name or d.ip or d.mac }}{% if d.name or d.ip %} <span class="check-sub">{{ d.mac }}{% if d.name and d.ip %} · {{ d.ip }}{% endif %}</span>{% endif %}</div>{% endfor %}</td>
+            <td>{% for d in x.new %}<div>{{ d.name or d.ip or d.mac }}{% if d.name or d.ip %} <span class="check-sub">{{ d.mac }}{% if d.name and d.ip %} · {{ d.ip }}{% endif %}</span>{% endif %}</div>{% endfor %}
+                {% if not x.new_is_there %}<div class="check-sub">{{ _("not on the port now") }}</div>{% endif %}</td>
+            <td class="nowrap">{{ format_datetime(x.at) }}
+                {% if x.changes > 1 %}<div class="check-sub">{{ _n("{n} change", "{n} changes", x.changes) }}</div>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="check-empty">{{ _("No port got another device.") }}</p>
+    {% endif %}
+</section>
+
+</div>
+
+<script>
+// One-click fixes. Cables go through /rack/connect: if a port already has a
+// cable the server answers 409 and we ask before replacing it. Every fix is
+// in Rack History and can be undone there.
+document.addEventListener("click", async function (event) {
+    const button = event.target.closest(".check-fix");
+    if (!button) return;
+    const fix = JSON.parse(button.dataset.fix);
+    button.disabled = true;
+
+    async function post(url, body) {
+        const response = await fetch(url, {
+            method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body),
+        });
+        return {status: response.status, result: await response.json().catch(() => ({}))};
+    }
+
+    const body = {first_endpoint: fix.a, second_endpoint: fix.b};
+    let answer = await post("/rack/connect", body);
+    if (answer.status === 409 && answer.result.needs_confirm) {
+        const lines = (answer.result.conflicts || []).map(text => "• " + window.tm(text)).join("\n");
+        if (confirm(window.tm(fix.label) + "\n\n" + window.t("This will remove the existing cable:") + "\n" + lines + "\n\n" + window.t("Continue?"))) {
+            answer = await post("/rack/connect", {...body, replace: true});
+        } else {
+            button.disabled = false;
+            return;
+        }
+    }
+
+    if (answer.result.ok) {
+        button.textContent = window.t("Done");
+        button.closest("tr").classList.add("row-ok");
+        setTimeout(() => window.location.reload(), 700);
+    } else {
+        button.disabled = false;
+        alert(window.tm(answer.result.error) || window.t("Could not apply the fix"));
+    }
+});
+</script>
+
+{% endblock %}

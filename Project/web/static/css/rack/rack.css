@@ -1,0 +1,831 @@
+.rack-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .rack-page-header h1 {
+        margin: 0;
+    }
+
+    .rack-page-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .rack-layout {
+        display: grid;
+        grid-template-columns: 310px max-content;
+        grid-template-rows: auto;
+        gap: 18px;
+        align-items: start;
+        justify-content: start;
+    }
+
+    .rack-layout > .rack-sidebar {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: start;
+    }
+
+    .rack-layout > .rack-main {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: start;
+        justify-self: start;
+        width: max-content;
+        max-width: calc(100vw - 430px);
+        margin: 0 !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        position: relative;
+        top: 0;
+    }
+
+    .rack-sidebar {
+        position: sticky;
+        top: calc(var(--header-height, 64px) + 12px);   /* below the sticky header */
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .rack-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 12px;
+    }
+
+    .rack-card h3 {
+        margin: 0 0 10px;
+        font-size: 15px;
+    }
+
+    .rack-form {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rack-form label {
+        display: grid;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .rack-form input,
+    .rack-form select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 8px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface);
+    }
+
+    .rack-error {
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        border: 1px solid light-dark(#f0a3a3, #663030);
+        background: var(--danger-soft);
+        color: var(--danger-text);
+        border-radius: 6px;
+    }
+
+    .rack-help {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.45;
+    }
+
+    .rack-status {
+        padding: 8px 10px;
+        border-radius: 6px;
+        background: var(--accent-soft);
+        border: 1px solid light-dark(#c9dbff, #213762);
+        color: var(--accent-text);
+        font-size: 12px;
+        min-height: 18px;
+    }
+
+    .rack-status-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .rack-clear-selection {
+        display: none;
+        padding: 5px 9px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface);
+        color: light-dark(#46515c, #b8c1c9);
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .rack-clear-selection.visible {
+        display: inline-flex;
+    }
+
+    .rack-clear-selection:hover {
+        background: var(--surface-3);
+    }
+
+    .rack-viewport {
+        width: max-content;
+        max-width: none;
+        overflow: visible;
+        max-height: none;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #18212b;
+    }
+
+    .rack-visual-shell {
+        position: relative;
+        display: inline-block;
+        width: max-content;
+        min-width: 0;
+        padding: 14px 60px;
+        box-sizing: border-box;
+    }
+
+    .rack-frame {
+        position: relative;
+        z-index: 2;
+        width: max-content;
+        min-width: 850px;
+        border: 8px solid #3b4651;
+        border-radius: 8px;
+        background: #111820;
+        box-shadow: inset 0 0 0 1px #596673;
+    }
+
+    .rack-title-strip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        background: #28333e;
+        color: #fff;
+        border-bottom: 1px solid #475563;
+        font-weight: 700;
+    }
+
+    .rack-location {
+        font-size: 12px;
+        color: #c5ced7;
+        font-weight: 400;
+    }
+
+    .rack-row {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr);
+        width: 100%;
+        min-width: 100%;
+        min-height: 58px;
+        border-bottom: 1px solid #303a44;
+    }
+
+    .rack-row:last-child {
+        border-bottom: 0;
+    }
+
+    .rack-u {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #aeb8c2;
+        background: #202a34;
+        border-right: 1px solid #394550;
+        font-size: 11px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rack-slot {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        padding: 5px 8px;
+        box-sizing: border-box;
+    }
+
+    .rack-empty-slot {
+        width: 100%;
+        height: 30px;
+        border: 1px dashed light-dark(rgba(255,255,255,.07), rgba(255, 255, 255, 0.07));
+        border-radius: 4px;
+    }
+
+    .rack-device {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        border-radius: 5px;
+        border: 1px solid #687684;
+        background: linear-gradient(180deg, #343f4b, #242d36);
+        color: #fff;
+        padding: 6px 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    }
+
+    .rack-device.patch-panel {
+        background: linear-gradient(180deg, #292d32, #181b1f);
+        border-color: #555e66;
+    }
+
+    .rack-device.cable-organizer {
+        width: 100%;
+        min-width: 320px;
+        padding: 5px 8px;
+        background: linear-gradient(180deg, #20252a, #101419);
+        border-color: #4f5963;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), 0 2px 4px rgba(0,0,0,.35);
+    }
+
+    .cable-organizer-body {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(22px, 1fr));
+        gap: 6px;
+        width: 100%;
+        min-height: 20px;
+        align-items: center;
+    }
+
+    .cable-organizer-loop {
+        height: 15px;
+        border: 2px solid #59636c;
+        border-top-width: 4px;
+        border-radius: 4px;
+        background: #090c0f;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,.7);
+    }
+
+    .cable-organizer-top {
+        border-radius: 5px 5px 2px 2px;
+    }
+
+    .cable-organizer-bottom {
+        border-radius: 2px 2px 5px 5px;
+    }
+
+    .rack-device-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .rack-device-name {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .rack-device-meta {
+        font-size: 10px;
+        color: #b8c2cc;
+        white-space: nowrap;
+    }
+
+    .rack-remove-form {
+        margin: 0;
+    }
+
+    /* Port layout of a patch panel (Rack Change): next to Remove, on the right. */
+    .patch-layout-form {
+        margin: 0 0 0 auto;
+    }
+
+    .patch-layout-button {
+        padding: 1px 6px;
+        border: 1px solid #798590;
+        border-radius: 4px;
+        background: transparent;
+        color: #c6d0d9;
+        cursor: pointer;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .patch-layout-button:hover {
+        border-color: light-dark(#9cc3ff, #25426e);
+        color: #ffffff;
+    }
+
+    .rack-remove-button {
+        padding: 1px 6px;
+        border: 1px solid #798590;
+        border-radius: 4px;
+        background: transparent;
+        color: #c6d0d9;
+        cursor: pointer;
+        font-size: 10px;
+    }
+
+    .rack-remove-button:hover {
+        border-color: light-dark(#ef8b8b, #6d3131);
+        color: #ffd1d1;
+    }
+
+    .server-room-delete-form {
+        margin: 9px 0 0 0;
+    }
+
+    .server-room-delete-button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 10px;
+        border: 1px solid light-dark(#e1a0a0, #623a3a);
+        border-radius: 5px;
+        background: var(--danger-soft);
+        color: var(--danger-text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .server-room-delete-button:hover {
+        background: var(--danger-soft);
+        border-color: #d97878;
+    }
+
+    .rack-delete-form {
+        margin: 9px 0 0 0;
+    }
+
+    .rack-delete-button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 10px;
+        border: 1px solid light-dark(#e1a0a0, #623a3a);
+        border-radius: 5px;
+        background: var(--danger-soft);
+        color: var(--danger-text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .rack-delete-button:hover {
+        background: var(--danger-soft);
+        border-color: #d97878;
+    }
+
+    .rack-ports {
+        display: flex;
+        flex-wrap: nowrap;
+        width: max-content;
+        gap: 3px;
+        align-items: center;
+    }
+
+    /* Physical switch front-panel layout.
+       Standard:  1 3 5 ... on top, 2 4 6 ... on bottom.
+       MikroTik:  2 4 6 ... on top, 1 3 5 ... on bottom. */
+    .rack-switch-port-matrix {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        align-items: flex-start;
+        overflow: visible;
+        padding: 2px 0;
+    }
+
+    .rack-switch-port-row {
+        display: flex;
+        gap: 3px;
+        align-items: center;
+        flex-wrap: nowrap;
+        min-height: 20px;
+    }
+
+    /* Optical ports after a gap, with their own numbers (Te1, Gi1, SFP1 …),
+       as on the switch page. */
+    .rack-switch-port-gap {
+        flex: 0 0 10px;
+    }
+
+    .rack-port.switch-port-optical {
+        font-size: 7px;
+        letter-spacing: -0.2px;
+    }
+
+    /* The management port (mng, by hand: not in SNMP), like a server's. */
+    .rack-port.switch-port.switch-port-mng {
+        border-color: #00e5ff;
+        box-shadow: none;
+        color: light-dark(#00e5ff, #66efff);
+        font-size: 7px;
+    }
+
+    .rack-port {
+        position: relative;
+        z-index: 5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 25px;
+        height: 20px;
+        box-sizing: border-box;
+        border-radius: 3px;
+        border: 1px solid #74808b;
+        background: #12181e;
+        color: #dbe3ea;
+        font-size: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+        font-variant-numeric: tabular-nums;
+        /* No transitions: on a large or zoomed rack each animated frame
+           repaints the cables, and the hover lags. */
+    }
+
+    .rack-port:hover {
+        transform: scale(1.16);
+        z-index: 8;
+    }
+
+    .rack-port.switch-port.link-up {
+        box-shadow: inset 0 0 0 2px rgba(57, 203, 119, .55);
+    }
+
+    .rack-port.switch-port.link-down {
+        box-shadow: inset 0 0 0 2px rgba(231, 76, 60, .48);
+    }
+
+    .rack-port.switch-port.link-unknown {
+        box-shadow: inset 0 0 0 2px rgba(148, 163, 184, .35);
+    }
+
+    /* Down, but nothing expected on it (domain/ports.port_is_expected): no ring. */
+    .rack-port.switch-port.link-idle {
+        box-shadow: none;
+        color: #8d99a5;
+    }
+
+    .rack-patch-ports {
+        display: grid;
+        grid-auto-flow: row;
+        gap: 3px;
+        width: max-content;
+        align-items: center;
+    }
+
+    .rack-patch-ports-8,
+    .rack-patch-ports-12 {
+        grid-template-columns: repeat(12, 25px);
+    }
+
+    .rack-patch-ports-24,
+    .rack-patch-ports-48,
+    .rack-patch-ports-96 {
+        grid-template-columns: repeat(24, 25px);
+    }
+
+    /* Odd ports on top, even below (patch_panels.port_layout = 'odd_even'):
+       two rows filled column by column, so 1 is above 2, 3 above 4 … */
+    .rack-patch-ports.rack-patch-ports-odd-even {
+        grid-template-columns: none;
+        grid-template-rows: repeat(2, auto);
+        grid-auto-flow: column;
+        grid-auto-columns: 25px;
+    }
+
+    /* 48-port panels are therefore rendered as exactly 2 rows of 24.
+       96-port panels naturally use 4 rows of 24. */
+    .rack-port.patch-port {
+        background: #20252a;
+    }
+
+    .rack-port.patch-port-ethernet {
+        border-radius: 3px;
+        background: #20252a;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.025);
+    }
+
+    /* SDI / BNC: round connector. */
+    .rack-port.patch-port-sdi {
+        width: 20px;
+        height: 20px;
+        margin: 0 2.5px;
+        border-radius: 50%;
+        border: 2px solid light-dark(#aeb7bf, #4d5256);
+        background: radial-gradient(circle at 50% 50%, #11161b 0 38%, #66717b 40% 55%, #171c21 58% 100%);
+        color: #f1f5f9;
+        font-size: 7px;
+        box-shadow: 0 0 0 1px rgba(0,0,0,.55);
+    }
+
+    /* ODF / fiber adapters remain rectangular. */
+    .rack-port.patch-port-odf {
+        width: 25px;
+        height: 20px;
+        margin: 0;
+        border-radius: 2px;
+        border: 1px solid #8f82d8;
+        background: linear-gradient(180deg, #28253a, #171521);
+        color: #efeaff;
+        box-shadow: inset 0 0 0 2px rgba(167,139,250,.12);
+    }
+
+    .rack-device.patch-panel-sdi {
+        border-color: #8b7350;
+    }
+
+    .rack-device.patch-panel-odf {
+        border-color: #7567b4;
+    }
+
+    .rack-port.connected,
+    .rack-port.connected-ethernet {
+        border-color: #58a6ff;
+    }
+
+    .rack-port.connected-fiber {
+        border-color: light-dark(#a78bfa, #3c2a71);
+        box-shadow: 0 0 7px rgba(167,139,250,.65);
+    }
+
+    .rack-port.connected-sdi {
+        border-color: #f59e0b;
+        box-shadow: 0 0 7px rgba(245,158,11,.65);
+    }
+
+    .rack-port.selected {
+        outline: 3px solid #f7c948;
+        outline-offset: 1px;
+        transform: scale(1.12);
+        z-index: 9;
+    }
+
+    .rack-port.connection-highlight {
+        outline: 3px solid #55d6ff;
+        outline-offset: 1px;
+        box-shadow: 0 0 12px rgba(85,214,255,.9);
+        transform: scale(1.18);
+        z-index: 10;
+    }
+
+    .rack-port.connected-fiber.connection-highlight {
+        outline-color: light-dark(#c4b5fd, #322566);
+        box-shadow: 0 0 12px rgba(196,181,253,.92);
+    }
+
+    .rack-port.connected-sdi.connection-highlight {
+        outline-color: #fbbf24;
+        box-shadow: 0 0 12px rgba(251,191,36,.92);
+    }
+
+    #rack-connections-svg,
+    .rack-connections-svg {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        overflow: visible;
+    }
+
+    .connection-path {
+        vector-effect: non-scaling-stroke;
+    }
+
+    .connection-path.connection-ethernet {
+        stroke: light-dark(rgba(88, 166, 255, .52), rgba(88, 166, 255, 0.52));
+    }
+
+    .connection-path.connection-fiber {
+        stroke: light-dark(rgba(167, 139, 250, .72), rgba(60, 42, 113, 0.72));
+        stroke-width: 2.8;
+    }
+
+    .connection-path.connection-sdi {
+        stroke: light-dark(rgba(245, 158, 11, .76), rgba(245, 158, 11, 0.76));
+        stroke-width: 2.8;
+    }
+
+    .connection-path.connection-ethernet.connection-highlight {
+        stroke: #55d6ff;
+        stroke-width: 4.5;
+    }
+
+    .connection-path.connection-fiber.connection-highlight {
+        stroke: light-dark(#c4b5fd, #322566);
+        stroke-width: 4.8;
+    }
+
+    .connection-path.connection-sdi.connection-highlight {
+        stroke: #fbbf24;
+        stroke-width: 4.8;
+    }
+
+    .rack-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0;
+        padding: 7px 12px;
+        font-size: 11px;
+        color: #c3cbd3;
+        background: #202a34;
+        border-bottom: 1px solid #303a44;
+    }
+
+    .legend-dot {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-right: 4px;
+        vertical-align: -1px;
+    }
+
+    .legend-up { background: #39cb77; }
+    .legend-down { background: #e74c3c; }
+    .legend-idle { background: #3a4550; box-shadow: inset 0 0 0 1px #5c6773; }
+    .legend-connected,
+    .legend-ethernet { background: #58a6ff; }
+    .legend-fiber { background: #a78bfa; }
+    .legend-sdi { background: #f59e0b; }
+    .legend-selected { background: #f7c948; }
+
+
+    .rack-side-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .rack-side-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        padding: 7px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text-2);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .rack-side-tab.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent-text);
+        box-shadow: inset 0 0 0 1px #9ec0f4;
+    }
+
+    .rack-side-label {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-text);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 1050px) {
+
+        .rack-sidebar {
+            position: static;
+        }
+
+        .rack-layout > .rack-sidebar,
+        .rack-layout > .rack-main {
+            grid-column: 1;
+            grid-row: auto;
+        }
+
+        .rack-viewport {
+            max-width: none;
+            overflow: visible;
+        }
+    }
+
+
+/* Port opened from the dashboard search (?focus=...) */
+.search-focus {
+    outline: 3px solid #facc15;
+    outline-offset: 2px;
+    animation: search-focus-pulse 1s ease-in-out 3;
+}
+
+@keyframes search-focus-pulse {
+    50% { outline-color: rgba(250, 204, 21, 0.2); }
+}
+
+
+/* ---------- Rack Change page: layout width, sidebar "Add ..." buttons, popup form header ---------- */
+
+.rack-change-page {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+}
+
+.rack-change-page .rack-layout {
+    width: max-content;
+    max-width: none;
+}
+
+@media (max-width: 1050px) {
+    .rack-change-page,
+    .rack-change-page .rack-layout {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+.rack-add-btn {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid #78c596;
+    border-radius: 5px;
+    background: var(--ok-soft);
+    color: var(--ok-text);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.rack-add-btn:hover {
+    background: var(--ok-soft);
+    border-color: #4ade80;
+}
+
+.rack-sidebar > .rack-add-btn {
+    margin-bottom: 12px;
+}
+
+.rack-card .rack-add-btn {
+    margin-top: 10px;
+}
+
+.rack-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.rack-form-header h3 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.rack-form-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.rack-form-close:hover {
+    color: var(--text-2);
+    background: var(--surface-3);
+}
+
+
+/* A narrower rack (racks.width_percent, render_rack.html): its frame takes
+   that share of a normal rack's width, in every view. */
+.rack-visual-shell[data-rack-width] .rack-frame {
+    min-width: calc(850px * var(--rack-width, 1)) !important;
+}

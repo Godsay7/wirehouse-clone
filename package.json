@@ -1,0 +1,13 @@
+{
+  "name": "wirehouse",
+  "private": true,
+  "description": "Development tools only (the site itself is Python): stylelint for the CSS, playwright-core for browser checks (.claude/skills/ui-check).",
+  "scripts": {
+    "lint:css": "stylelint \"Project/web/static/css/**/*.css\"",
+    "ui:snap": "node .claude/skills/ui-check/snap.js"
+  },
+  "devDependencies": {
+    "playwright-core": "1.66.0-alpha-2026-11-09",
+    "stylelint": "18.0.0"
+  }
+}

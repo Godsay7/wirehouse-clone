@@ -1,0 +1,78 @@
+{# Trunk cables of this rack's ODF panels: list, delete, add. #}
+<div class="rack-card rack-trunks-card">
+    <h3>{{ _("Trunk cables") }}</h3>
+    <div class="rack-help">
+        {{ _("A trunk joins a range of ports of an ODF here to a range of another ODF (usually in another room). Cable Path follows trunks from one room to the next.") }}
+    </div>
+
+    {% if trunks %}
+        <ul class="rack-trunk-list">
+            {% for trunk in trunks %}
+                <li>
+                    <div class="rack-trunk-text">
+                        <strong>{{ trunk.near }}</strong> p.{{ trunk.near_ports }}
+                        ⇄ <strong>{{ trunk.far }}</strong> p.{{ trunk.far_ports }}
+                        <span class="rack-trunk-where">{{ trunk.far_where }}{% if trunk.name %} · {{ trunk.name }}{% endif %}</span>
+                    </div>
+                    {% if can_edit %}
+                    <form method="post" action="{{ url_for('equipment.delete_trunk', rack_id=rack.id, trunk_id=trunk.id, side=current_side) }}"
+                          hx-confirm="{{ _("Delete this trunk cable record?") }}">
+                        <button class="rack-remove-button" type="submit" title="{{ _("Delete trunk") }}">×</button>
+                    </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% elif local_odf_panels %}
+        <div class="rack-help">{{ _("No trunk cables yet.") }}</div>
+    {% else %}
+        <div class="rack-help">{{ _("This rack has no ODF panels.") }}</div>
+    {% endif %}
+
+    {% if local_odf_panels and can_edit %}
+        <button class="rack-add-btn" id="btn-add-trunk" data-target="form-add-trunk" type="button" data-requires-login>{{ _("Add Trunk Cable") }}</button>
+
+        <div id="form-add-trunk" class="rack-form-popup form-popup-inline form-popup-tight" data-trigger="btn-add-trunk" style="display: none;">
+            <div class="rack-form-header">
+                <h3>{{ _("Add Trunk Cable") }}</h3>
+                <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+            </div>
+            <form class="rack-form" method="post" action="{{ url_for('equipment.add_trunk', rack_id=rack.id) }}">
+                <input type="hidden" name="side" value="{{ current_side }}">
+                <label>
+                    {{ _("ODF in this rack") }}
+                    <select name="panel_a_id" required>
+                        {% for panel in local_odf_panels %}
+                            <option value="{{ panel.id }}">{{ panel.name }} (U{{ panel.rack_unit }}{{ ' ' ~ _('rear') if panel.side == 'rear' }}, {{ _n("{n} port", "{n} ports", panel.port_count) }})</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    {{ _("From port") }}
+                    <input type="number" name="port_a_start" min="1" value="1" required>
+                </label>
+                <label>
+                    {{ _("Other ODF") }}
+                    <select name="panel_b_id" required>
+                        {% for panel in odf_panels if panel.rack_id != rack.id %}
+                            <option value="{{ panel.id }}">{{ panel.room }} / {{ panel.rack }} / {{ panel.name }} ({{ panel.port_count }})</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    {{ _("From port") }}
+                    <input type="number" name="port_b_start" min="1" value="1" required>
+                </label>
+                <label>
+                    {{ _("Fibres") }}
+                    <input type="number" name="port_count" min="1" value="24" required>
+                </label>
+                <label>
+                    {{ _("Name (optional)") }}
+                    <input type="text" name="name" maxlength="80" placeholder="NH ↔ Bunker">
+                </label>
+                <button class="button" type="submit">{{ _("Save") }}</button>
+            </form>
+        </div>
+    {% endif %}
+</div>

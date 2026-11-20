@@ -1,0 +1,121 @@
+/* ============================================================
+   IP / Hostname: physical port IP
+   ============================================================ */
+
+.physical-port-ip {
+    position: absolute;
+
+    left: 9px;
+    right: 9px;
+
+    top: 61px;
+
+    font-family: var(--font-mono);
+
+    font-size: 10px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    opacity: 0.95;
+}
+
+
+/* ============================================================
+   Physical port hostname
+   ============================================================ */
+
+.physical-port-hostname {
+    position: absolute;
+
+    left: 9px;
+    right: 9px;
+
+    top: 78px;
+
+    font-size: 10px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    opacity: 0.95;
+}
+
+
+/* Move MAC lower */
+
+.physical-port-mac {
+    top: 95px;
+}
+
+
+/* Make port slightly taller */
+
+.physical-port {
+    min-height: 155px;
+}
+/* ============================================================
+   Port IP / Hostname
+   ============================================================ */
+
+.port-ip {
+    margin-top: 5px;
+
+    height: 14px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    font-family: var(--font-mono);
+
+    font-size: 10px;
+
+    color: #ffffff;
+
+    opacity: 0.95;
+}
+
+
+.port-hostname {
+    margin-top: 3px;
+
+    height: 14px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    font-size: 10px;
+
+    color: #ffffff;
+
+    opacity: 0.95;
+}
+
+
+/* A little more room for IP + hostname */
+
+.port {
+    min-height: 170px;
+}
+
+
+/* IP column in details table */
+
+.ip-address {
+    font-family: var(--font-mono);
+
+    white-space: nowrap;
+}
+
+
+.hostname {
+    white-space: nowrap;
+}

@@ -1,0 +1,29 @@
+{# Add Switch (from SNMP inventory) popup form. #}
+<button class="rack-add-btn" id="btn-add-switch" data-target="form-add-switch" type="button" data-requires-login>{{ _("Add Switch") }}</button>
+
+<div id="form-add-switch" class="rack-card rack-form-popup form-popup-below" data-trigger="btn-add-switch" style="display: none;">
+    <div class="rack-form-header">
+        <h3>{{ _("Add Switch") }} · {{ _('Rear') if current_side == 'rear' else _('Front') }}</h3>
+        <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+    </div>
+    <form class="rack-form" method="post" action="{{ url_for('equipment.add_switch', rack_id=rack.id) }}">
+        <input type="hidden" name="side" value="{{ current_side }}">
+        <label>
+            {{ _("Switch") }}
+            <select name="switch_id" required>
+                <option value="">{{ _("Select...") }}</option>
+                {% for switch in available_switches|sort(attribute='host') %}
+                    <option value="{{ switch.id }}">{{ switch.host }}{% if switch.model %} · {{ switch.model }}{% endif %}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            {{ _("Rack Unit") }}
+            <input type="number" name="rack_unit" min="1" max="{{ rack.units }}" required>
+        </label>
+        <div class="rack-help">
+            {{ _("NH-SW100 / NH-SW101 are 2U. For them, Rack Unit is the top occupied U.") }}
+        </div>
+        <button class="button" type="submit">{{ _("Save") }}</button>
+    </form>
+</div>

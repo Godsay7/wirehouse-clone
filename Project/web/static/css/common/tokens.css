@@ -1,0 +1,143 @@
+/* ==========================================================
+   Design tokens: the colours, type, radii and shadows of the
+   site's interface (pages, cards, tables, forms, buttons).
+
+   Light values on :root, dark values under html[data-theme="dark"]:
+   a rule that uses var(--…) works in both themes as it is. Colours of
+   their own are written light-dark(<light>, <dark>), see
+   scripts/theme_colors.py.
+
+   Hardware drawings (port panels, racks, devices) keep their own
+   colours: they show real equipment.
+   ========================================================== */
+
+/* Inter (SIL Open Font License, static/fonts/inter/LICENSE.txt), served by the
+   site itself: the same letters on Windows, Linux and phones. Latin and
+   Cyrillic subsets, one variable file each (all weights). */
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url("../../fonts/inter/inter-cyrillic-wght-normal.woff2") format("woff2");
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url("../../fonts/inter/inter-latin-wght-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    /* light-dark(…) in the stylesheets picks its value by this. */
+    color-scheme: light;
+
+    /* Surfaces */
+    --bg: #f4f6f8;                  /* the page */
+    --surface: #ffffff;             /* cards, tables, menus, inputs */
+    --surface-2: #f7f9fb;           /* a quiet band inside a card (table head, footer) */
+    --surface-3: #eef1f4;           /* a stronger band, chips, pressed */
+    --surface-hover: #eef3fe;       /* a row or item under the pointer */
+    --header-bg: #1f2937;
+    --header-edge: transparent;     /* the line under the header (the shadow is enough on a light page) */
+    --header-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    /* Text */
+    --text: #1f2937;
+    --text-2: #45515d;              /* secondary but still readable */
+    --text-muted: #66717c;          /* hints, captions, units */
+
+    /* Lines */
+    --border: #d7dde3;
+    --border-subtle: #e3e8ed;       /* table rows */
+    --border-strong: #9aa5b1;       /* hover, emphasis */
+
+    /* Accent (links, primary buttons, focus) */
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-text: #1d4ed8;
+    --accent-soft: #e8eefc;
+    --on-accent: #ffffff;
+    --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
+
+    /* States */
+    --ok: #16a34a;
+    --ok-text: #15803d;
+    --ok-soft: #e8f5ee;
+    --warn: #d97706;
+    --warn-text: #b45309;
+    --warn-soft: #fff6e5;
+    --danger: #dc2626;
+    --danger-text: #b42318;
+    --danger-soft: #fdeeee;
+    --info: #2563eb;
+    --idle: #94a3b8;                /* off / unused, nothing wrong */
+    --idle-text: #64748b;
+
+    /* Type */
+    --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-base: 14px;
+    --fs-md: 16px;
+    --fs-lg: 20px;
+    --fs-xl: 28px;
+
+    /* Shape */
+    --radius-sm: 5px;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.10);
+    --shadow-lg: 0 10px 28px rgba(15, 23, 42, 0.22);
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg: #1c2024;
+    --surface: #24292e;
+    --surface-2: #2a3036;
+    --surface-3: #313840;
+    --surface-hover: #1d2a40;
+    --header-bg: #161b22;
+    --header-edge: #3b434b;         /* the page is about as dark as the header */
+    --header-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+
+    --text: #dfe3e8;
+    --text-2: #c2c9d1;
+    --text-muted: #9aa4ae;
+
+    --border: #3b434b;
+    --border-subtle: #353c44;
+    --border-strong: #5c6773;
+
+    --accent: #2563eb;              /* white text on it: 5.2:1 */
+    --accent-hover: #1d4ed8;
+    --accent-text: #8ab4ff;
+    --accent-soft: #1d2d4d;
+    --on-accent: #ffffff;
+    --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.45);
+
+    --ok: #22c55e;
+    --ok-text: #86efac;
+    --ok-soft: #173326;
+    --warn: #f59e0b;
+    --warn-text: #fbbf6b;
+    --warn-soft: #3a2c12;
+    --danger: #ef4444;
+    --danger-text: #f59a9a;
+    --danger-soft: #3d1d1f;
+    --info: #60a5fa;
+    --idle: #5c6773;
+    --idle-text: #9aa4ae;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.6);
+}

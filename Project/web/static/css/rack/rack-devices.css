@@ -1,0 +1,365 @@
+/* ============================================================
+   Loaded last in the rack bundle.
+
+   1. Server, 4900M and temporary switch blocks (were inline styles in
+      the rack/ templates; only the per-device CSS variables stay inline).
+   2. Cable lines, port menu and cable room under devices (were
+      <style> blocks that rack_change.js / rack_view.js injected at
+      runtime). Selectors keep their old specificity — :where() adds
+      none — so the cascade is the same as before.
+   ============================================================ */
+
+/* ---------- 1. Server blocks ---------- */
+
+.rack-device.server-device {
+    position: absolute;
+    top: 3px;
+    left: 8px;
+    width: calc(100% - 16px);
+    box-sizing: border-box;
+    height: calc(var(--rack-device-units, 1) * 58px - 6px);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.server-front-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    z-index: 0;
+    opacity: 0.95;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.server-device .server-device-header {
+    position: relative;
+    z-index: 1;
+    border-radius: 4px;
+}
+
+.server-device .server-device-header.on-image {
+    background: light-dark(rgba(17, 24, 32, 0.80), rgba(17, 24, 32, 0.8));
+}
+
+.server-device .server-rack-ports {
+    position: relative;
+    z-index: 1;
+}
+
+.server-device .server-port-slot {
+    position: relative;
+    display: inline-block;
+}
+
+.server-device .server-port-slot-mng {
+    margin-right: 15px;
+}
+
+.server-device .rack-port.server-port {
+    cursor: pointer;
+}
+
+.server-device .rack-port.server-port-mng {
+    color: light-dark(#00e5ff, #66efff);
+    border-color: #00e5ff;
+}
+
+/* Edit controls show only after the gear (⚙️) is clicked. */
+.rack-device.server-device .server-port-control {
+    display: none;
+}
+
+.rack-device.server-device.edit-mode .server-port-control {
+    display: inline-block;
+}
+
+.server-device .server-port-remove {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    z-index: 20;
+    margin: 0;
+}
+
+.server-device .server-port-remove button {
+    background: #111820;
+    border: 1px solid #ff4d4d;
+    border-radius: 50%;
+    color: #ff4d4d;
+    font-size: 9px;
+    cursor: pointer;
+    padding: 0;
+    width: 15px;
+    height: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.server-device .server-port-add-form {
+    margin: 0;
+    vertical-align: top;
+}
+
+.server-device .rack-port.server-port-add {
+    background: transparent;
+    border: 1px dashed #687684;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    padding: 0;
+}
+
+.server-device .server-image-control {
+    position: relative;
+    z-index: 10;
+    margin: auto 8px 8px 8px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px dashed #687684;
+    border-radius: 4px;
+}
+
+.server-device .server-image-control form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+}
+
+.server-device .server-image-control input[type="file"] {
+    font-size: 11px;
+    width: 210px;
+    color: #e5e7eb;
+}
+
+.server-device .server-image-save {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: #4f80ff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.server-device .server-image-remove {
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    color: #ff4d4d;
+    background: transparent;
+    border: 1px solid #ff4d4d;
+    border-radius: 4px;
+}
+
+.server-device .server-depth-control {
+    position: relative;
+    z-index: 10;
+    margin: auto 8px 8px 8px;
+}
+
+.server-device .server-depth-control.after-image-control {
+    margin-top: 4px;
+}
+
+.server-device .server-depth-control button {
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    color: #e5e7eb;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid #687684;
+    border-radius: 4px;
+}
+
+
+/* Cisco 4900M (2U) and temporary switches: placed over their units. */
+.rack-device.c4900m-rack-device {
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    width: calc(100% - 16px);
+    height: calc(var(--rack-device-units, 2) * 58px - 10px);
+    z-index: 12;
+}
+
+.rack-device.switch-placeholder-device {
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    width: calc(100% - 16px);
+    height: var(--rack-placeholder-height);
+    z-index: 11;
+}
+
+
+/* ---------- 2. Cables and the port menu ---------- */
+
+.connection-path {
+    fill: none !important;
+    stroke: #4f80ff;
+    stroke-width: 2px;
+    opacity: 0.7;
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+.connection-path:hover,
+path.connection-highlight {
+    stroke: #00e5ff !important;
+    stroke-width: 3.5px !important;
+    opacity: 1 !important;
+}
+
+/* Invisible, wider twin of every line (js/rack_cables.js): hovering or
+   clicking near a thin line hits it. A click keeps the cable lit. */
+.connection-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 8px;
+    vector-effect: non-scaling-stroke;
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+/* Rack Change: room under every device for the cable lines. */
+:where(.rack-layout) .rack-device-header {
+    margin-bottom: 22px;
+}
+
+:where(.rack-layout) .rack-device {
+    padding-bottom: 22px !important;
+}
+
+/* Rack View (board and opened rack): the same, a little tighter. */
+:where(.rack-dashboard-page) .rack-connections-svg {
+    z-index: 10 !important;
+    pointer-events: none;
+    overflow: visible !important;
+}
+
+:where(.rack-dashboard-page) .rack-switch-port-matrix {
+    padding-top: 19px;
+}
+
+:where(.rack-dashboard-page) .rack-device {
+    padding-bottom: 19px !important;
+}
+
+/* Right-click / "Port menu" of Rack Change. */
+#port-context-menu {
+    position: absolute;
+    display: none;
+    background-color: #111820;
+    border: 1px solid #687684;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    padding: 4px 0;
+    min-width: 160px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: #f8fafc;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.context-menu-item:hover {
+    background-color: #293846;
+}
+
+.context-menu-item.danger:hover {
+    background-color: #ff4d4d;
+    color: #fff;
+}
+
+
+/* ---------- 3. Rack Change sidebar (were inline styles) ---------- */
+
+/* display: none stays inline on the popups: rack_change.js reads it. */
+.rack-form-popup.form-popup-below {
+    margin-bottom: 12px;
+}
+
+.rack-form-popup.form-popup-inline {
+    margin-top: 12px;
+}
+
+.rack-form-popup.form-popup-inline.form-popup-tight {
+    margin-top: 10px;
+}
+
+.rack-help.rack-help-spaced {
+    margin-top: 8px;
+}
+
+.rack-help.rack-help-spaced.rack-help-spaced-sm {
+    margin-top: 6px;
+}
+
+
+/* Rack Change header: link to the rack change history. */
+.rack-page-header .rack-history-link {
+    align-self: center;
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--accent-text);
+    text-decoration: none;
+}
+
+.rack-page-header .rack-history-link:hover {
+    text-decoration: underline;
+}
+
+
+/* ---------- 4. Temporary switches laid out like SNMP switches ----------
+   A 1U temporary switch takes the height it needs (like a switch row) instead
+   of a fixed absolute box, and its ports are the switch ports' size in two
+   rows (odd on top, even below); only the dashed amber marks it temporary. */
+.rack-device.switch-placeholder-device-1u {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+}
+
+/* The same room for the cable lines as a switch (the older placeholder
+   rules in rack-cisco-4900m.css made it tighter). */
+.rack-layout .rack-device.switch-placeholder-device-1u {
+    padding-bottom: 22px !important;
+}
+
+.rack-layout .switch-placeholder-device-1u .rack-device-header {
+    margin-bottom: 22px;
+}
+
+.rack-dashboard-page .rack-device.switch-placeholder-device-1u {
+    padding-bottom: 19px !important;
+}
+
+.rack-dashboard-page .switch-placeholder-device-1u .rack-device-header {
+    margin-bottom: 5px;
+}
+
+/* Free ports: dashed amber; connected ones keep the cable colours. */
+.rack-port.temp-switch-port:not(.connected) {
+    border-style: dashed;
+    border-color: #a8915a;
+    background: #1d1b16;
+    color: #e8dcc0;
+}

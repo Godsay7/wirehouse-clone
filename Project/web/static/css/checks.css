@@ -1,0 +1,226 @@
+/* Cabling Check page */
+
+.checks-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.checks-export {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.checks-header h1 {
+    margin: 0 0 6px;
+}
+
+.checks-lead {
+    margin: 0 0 18px;
+    color: var(--text-muted);
+    max-width: 760px;
+    line-height: 1.45;
+}
+
+.check-section h2 {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+.check-section h2 small {
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: normal;
+    color: var(--text-muted);
+}
+
+.check-section {
+    margin-bottom: 26px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+.check-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.check-table th,
+.check-table td {
+    padding: 7px 9px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Long documentation and fix texts wrap (base.css keeps cells on one line). */
+.check-table td {
+    white-space: normal;
+}
+
+.check-table td.nowrap,
+.check-table td.check-fix-cell {
+    white-space: nowrap;
+}
+
+.check-table thead th {
+    background: var(--surface-3);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.check-table.compact td {
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.check-table a {
+    color: var(--accent-text);
+    text-decoration: none;
+}
+
+.check-table a:hover {
+    text-decoration: underline;
+}
+
+.check-port {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+}
+
+
+.check-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.check-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-mismatch { background: var(--danger-soft); color: var(--danger-text); }
+.badge-missing  { background: light-dark(#fef3c7, #413814); color: light-dark(#92400e, #f5b48c); }
+
+.check-proto {
+    margin-left: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.row-ok td {
+    opacity: 0.55;
+}
+
+.check-fix-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.check-fix {
+    padding: 4px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.check-fix-recable {
+    background: var(--warn);
+}
+
+.check-fix-recable:hover {
+    background: #b45309;
+}
+
+.check-fix-what {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--accent-text);
+}
+
+.check-details {
+    margin-top: 10px;
+}
+
+.check-details summary {
+    cursor: pointer;
+    padding: 6px 0;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.check-empty,
+.check-note {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+@media (max-width: 700px) {
+
+    .check-card b {
+        font-size: 20px;
+    }
+
+    .check-section {
+        padding: 12px;
+    }
+
+    .check-table th,
+    .check-table td {
+        padding: 5px 6px;
+        font-size: 12px;
+    }
+}
+
+/* "What can be done" above a section. */
+.check-howto {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-hover);
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+.check-howto summary {
+    color: var(--accent-text);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.check-howto ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.check-howto li {
+    margin: 3px 0;
+    line-height: 1.45;
+}
+

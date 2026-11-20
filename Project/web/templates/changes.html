@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Switch History") }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/changes.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{% block content %}
+
+
+<div class="changes-header">
+    <div>
+        <h1>{{ _("Switch History") }}</h1>
+        <p class="history-lead">{{ _("Port changes the collector found on the switches: link up/down, speed, devices (MAC).") }}</p>
+    </div>
+
+    <a href="{{ url_for('dashboard.index') }}" class="button secondary">
+        {{ _("Back") }}
+    </a>
+</div>
+
+<form
+    method="get"
+    class="changes-search"
+    data-live-search
+    hx-get="{{ url_for('changes.index') }}"
+    hx-trigger="submit, input delay:400ms from:find input"
+    hx-target="#changes-live"
+    hx-select="#changes-live"
+    hx-swap="outerHTML"
+    hx-push-url="true"
+>
+    <input
+        type="text"
+        name="search"
+        value="{{ search }}"
+        placeholder="{{ _("Search switch, port, type, value or interface...") }}"
+    >
+
+    <button type="submit" class="button">
+        {{ _("Search") }}
+    </button>
+
+    <a href="{{ url_for('changes.index') }}" class="button secondary" data-search-clear>
+        {{ _("Clear") }}
+    </a>
+</form>
+
+<div
+    id="changes-live"
+    hx-get="{{ request.full_path }}"
+    hx-trigger="inventory-changed from:body"
+    hx-select="#changes-live"
+    hx-swap="outerHTML"
+>
+{% include "_versions.html" %}
+<div class="table-container">
+<table class="changes-table switch-history-table">
+    <thead>
+        <tr>
+            <th>{{ _("Date / Time") }}</th>
+            <th>{{ _("Switch") }}</th>
+            <th>{{ _("Port") }}</th>
+            <th>{{ _("Type") }}</th>
+            <th>{{ _("Old Value") }}</th>
+            <th>{{ _("New Value") }}</th>
+            <th>{{ _("Interface") }}</th>
+        </tr>
+    </thead>
+
+        {# One <tbody> per change event (same time, switch, port): hovering highlights
+           the whole event; any of its rows opens the switch at that port. #}
+        {% for row in rows %}
+            {% set old_display = short_change_value(row.old_value, row.change_type) %}
+            {% set new_display = short_change_value(row.new_value, row.change_type) %}
+            {% set port_url = url_for('switches.view', switch_id=row.switch_id, search=(row.if_name or row.port)) %}
+
+            {% if row.group_start %}<tbody class="row-link-group">{% endif %}
+            <tr class="row-link" data-href="{{ port_url }}">
+                {% if row.group_start %}
+                    <td
+                        class="changes-time change-group-cell"
+                        rowspan="{{ row.group_size }}"
+                    >
+                        {{ format_datetime(row.detected_at) }}
+                    </td>
+
+                    <td
+                        class="changes-switch change-group-cell"
+                        rowspan="{{ row.group_size }}"
+                    >
+                        <a class="row-link-main" href="{{ port_url }}"><strong>{{ row.host }}</strong></a>
+                    </td>
+
+                    <td
+                        class="change-group-cell"
+                        rowspan="{{ row.group_size }}"
+                    >
+                        <a href="{{ url_for('switches.port_history', switch_id=row.switch_id, port=row.port) }}"
+                           title="{{ _("Port history") }}">{{ row.port }}</a>
+                    </td>
+                {% endif %}
+
+                <td>
+                    <span class="change-type change-type-{{ row.change_type|lower }}">
+                        {{ _(row.change_type) }}
+                    </span>
+                </td>
+
+                <td class="change-value">
+                    {% if row.change_type|lower == "mac" and old_display.startswith("Many MACs") %}
+                        <span class="many-macs-history">{{ old_display | tr }}</span>
+                    {% else %}
+                        {{ old_display | tr }}
+                    {% endif %}
+                </td>
+
+                <td class="change-value">
+                    {% if row.change_type|lower == "mac" and new_display.startswith("Many MACs") %}
+                        <span class="many-macs-history">{{ new_display | tr }}</span>
+                    {% else %}
+                        {{ new_display | tr }}
+                    {% endif %}
+                </td>
+
+                <td class="changes-interface">
+                    {{ row.if_name or "-" }}
+                </td>
+            </tr>
+            {% if row.group_end %}</tbody>{% endif %}
+        {% else %}
+            <tbody>
+            <tr>
+                <td colspan="7" class="empty-history">
+                    {{ _("No changes found.") }}
+                </td>
+            </tr>
+            </tbody>
+        {% endfor %}
+</table>
+</div>
+</div>
+
+{% endblock %}

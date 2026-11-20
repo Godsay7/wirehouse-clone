@@ -1,0 +1,61 @@
+{# Server room selector, add / delete room. #}
+<div class="rack-card">
+    <h3>{{ _("Server Room") }}</h3>
+
+    {% if server_rooms %}
+        <form class="rack-form" onsubmit="return false;" hx-boost="false">
+            <label>
+                {{ _("Current Server Room") }}
+                <select id="server-room-selector">
+                    {% for room in server_rooms|sort(attribute='name') %}
+                        <option
+                            value="{{ room.id }}"
+                            {% if selected_room and room.id == selected_room.id %}selected{% endif %}
+                        >
+                            {{ room.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+        </form>
+        <div class="rack-help rack-help-spaced rack-help-spaced-sm">
+            {{ _("The selected server room is remembered when you return to Rack Change.") }}
+        </div>
+    {% endif %}
+
+
+    {# Add / delete: only for a signed-in user (web/auth.py). #}
+    {% if can_edit %}
+    <button class="rack-add-btn" id="btn-add-room" data-target="form-add-room" type="button" data-requires-login>{{ _("Add Server Room") }}</button>
+
+    <div id="form-add-room" class="rack-form-popup form-popup-inline" data-trigger="btn-add-room" style="display: none;">
+        <div class="rack-form-header">
+            <h3>{{ _("New Server Room") }}</h3>
+            <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+        </div>
+        <form class="rack-form" method="post" action="{{ url_for('rack_change.create_room') }}">
+            <input type="hidden" name="side" value="{{ current_side }}">
+            <label>
+                {{ _("Name") }}
+                <input type="text" name="name" placeholder="{{ _("Server Room 1") }}" required>
+            </label>
+            <button class="button" type="submit">{{ _("Save") }}</button>
+        </form>
+    </div>
+
+    {% if selected_room %}
+        <form
+            class="server-room-delete-form"
+            method="post"
+            action="{{ url_for('rack_change.delete_room', room_id=selected_room.id) }}"
+            hx-confirm="{{ _("Delete this server room and all Rack View data inside it? Switch (SNMP) data will NOT be deleted.") }}"
+        >
+            <input type="hidden" name="side" value="{{ current_side }}">
+            <button class="server-room-delete-button" type="submit">{{ _("Delete Server Room") }}</button>
+        </form>
+        <div class="rack-help rack-help-spaced rack-help-spaced-sm">
+            {{ _("Deletes racks, patch panels and visual connections in this server room. Switch inventory stays intact.") }}
+        </div>
+    {% endif %}
+    {% endif %}
+</div>

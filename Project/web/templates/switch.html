@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ switch.host }}{% endblock %}
+
+{% block extra_css %}
+<script src="{{ url_for('static', filename='js/host_names.js') }}?v={{ asset_version }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/switch.css') }}?v={{ asset_version }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ========================================================
+     Header
+     ======================================================== -->
+
+<div
+    id="switch-live-header"
+    hx-get="{{ request.full_path }}"
+    hx-trigger="inventory-changed from:body"
+    hx-select="#switch-live-header"
+    hx-swap="outerHTML"
+>
+{% include "_versions.html" %}
+{% include "switch/_header.html" %}
+</div>
+
+<!-- ========================================================
+     Port Panel
+     ======================================================== -->
+
+<div class="section-header">
+    <h2>{{ _("Port Panel") }}</h2>
+</div>
+
+<div class="compact-port-legend">
+    <span class="compact-legend-item">
+        <span class="compact-legend-color compact-legend-up"></span>
+        UP
+    </span>
+
+        <span class="compact-legend-item" title="{{ _("Down, but a cable is documented, the port has a description or a device was seen on it") }}">
+        <span class="compact-legend-color compact-legend-down"></span>
+        DOWN
+    </span>
+
+    <span class="compact-legend-item" title="{{ _("Down and nothing expected on it") }}">
+        <span class="compact-legend-color compact-legend-idle"></span>
+        {{ _("Free") }}
+    </span>
+
+    <span class="compact-legend-item">
+        <span class="compact-legend-color compact-legend-unknown"></span>
+        {{ _("Unknown") }}
+    </span>
+
+    <span class="compact-legend-item" title="{{ _("Error counters grew in the last {n} h", n=error_window_hours) }}">
+        <span class="compact-legend-color compact-legend-errors"></span>
+        {{ _("Errors") }}
+    </span>
+</div>
+
+<div
+    id="switch-live-panel"
+    hx-get="{{ request.full_path }}"
+    hx-trigger="inventory-changed from:body"
+    hx-select="#switch-live-panel"
+    hx-swap="outerHTML"
+>
+{% include "switch/_front_panel.html" %}
+</div>
+
+<!-- ========================================================
+     Port Details
+     ======================================================== -->
+
+{% include "switch/_port_table.html" %}
+
+{% endblock %}

@@ -1,0 +1,13 @@
+{# Connection status and help. #}
+<div class="rack-card">
+    <h3>{{ _("Connections") }}</h3>
+    <div id="connection-status" class="rack-status">
+        {{ _("Select a port to start a connection. Ethernet/ODF can connect to switch ports; SDI only to SDI.") }}
+    </div>
+    <div class="rack-status-actions">
+        <button id="clear-connection-selection" class="rack-clear-selection" type="button">{{ _("Cancel selection") }}</button>
+    </div>
+    <div class="rack-help rack-help-spaced">
+        {{ _("The selected endpoint is kept while you switch Rack, Front/Rear, or Server Room. Switch ports may connect directly to other switch ports. Ethernet and ODF may connect to switch ports. SDI may connect only to another SDI patch-panel port. Right-click a connected port to disconnect it.") }}
+    </div>
+</div>

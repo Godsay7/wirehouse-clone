@@ -1,0 +1,72 @@
+{# SNMP switch with two port rows (odd/even, MikroTik reversed). Uses: sw, editable, rack, current_side.
+   Optical ports (SFP / uplink module) come after a gap with their own numbers
+   (Te1, Gi1, SFP1 …), as on the switch page (sw.optical_labels, domain/vendors.py);
+   their ids stay switch-<id>-port-<number>, so cables find them as before. #}
+{% macro switch_port(port, label=None) -%}
+    {% set link_class = 'link-up' if port.link == 'UP' else (('link-down' if port.expected else 'link-idle') if port.link == 'DOWN' else 'link-unknown') %}
+    <div
+        id="switch-{{ sw.switch_id }}-port-{{ port.port }}"
+        class="rack-port switch-port {{ link_class }}{{ ' switch-port-mng' if port.port == 0 else (' switch-port-optical' if label) }}"
+        data-endpoint-type="switch"
+        data-switch-id="{{ sw.switch_id }}"
+        data-switch-port="{{ port.port }}"
+        data-endpoint-label="{{ sw.host }} / {{ _("Port") }} {{ port.port }}{% if label %} ({{ label }}){% endif %}"
+        data-endpoint-location="{{ rack.server_room_name }} / {{ rack.name }} / {{ _('Rear') if current_side == 'rear' else _('Front') }}"
+        title="{{ sw.host }}&#10;{{ _("Port:") }} {{ port.port }}{% if label %} ({{ label }}){% endif %}&#10;{{ _("Interface:") }} {{ port.if_name or '-' }}&#10;{{ _("Link:") }} {{ port.link or '-' }}&#10;{{ _("Speed:") }} {{ port.speed or '-' }}&#10;{{ _("Device:") }} {{ port.device or '-' }}{% if port.description %}&#10;{{ _("Note:") }} {{ port.description }}{% endif %}"
+    >{{ label or port.port }}</div>
+{%- endmacro %}
+
+{% set optical = sw.optical_labels or {} %}
+{% set top_parity = 0 if sw.rack_port_layout == 'mikrotik' else 1 %}
+{# Signed in, Rack Change: dragged by its header to another unit (js/rack_move.js). #}
+<div class="rack-device switch-device"{% if editable %} data-move-url="{{ url_for('equipment.move_switch', rack_id=rack.id, switch_id=sw.switch_id) }}" data-move-key="switch-{{ sw.switch_id }}" data-move-top="{{ sw.rack_unit }}" data-move-height="{{ sw.height_units }}" data-move-name="{{ sw.host }}"{% endif %}>
+    <div class="rack-device-header">
+        <div>
+            <div class="rack-device-name">{{ sw.host }}</div>
+            <div class="rack-device-meta">
+                {{ sw.model or '-' }} · {{ _n("{n} port", "{n} ports", sw.ports|length) }}
+            </div>
+        </div>
+
+        {% if editable %}
+            {# The management port (mng) is not in SNMP: shown on demand (port 0). #}
+            <form class="patch-layout-form rack-mgmt-form" method="post"
+                  action="{{ url_for('equipment.switch_mgmt_port', rack_id=rack.id, switch_id=sw.switch_id, side=current_side) }}"
+                  {% if sw.mgmt_port %}hx-confirm="{{ _("Remove the management port? Its cable is removed too.") }}"{% endif %}>
+                <input type="hidden" name="enabled" value="{{ 0 if sw.mgmt_port else 1 }}">
+                <button class="patch-layout-button" type="submit"
+                        title="{{ _("Remove the management port") if sw.mgmt_port else _("Add a management port (mng)") }}">{{ "− mng" if sw.mgmt_port else "+ mng" }}</button>
+            </form>
+            <form
+                class="rack-remove-form"
+                method="post"
+                action="{{ url_for('equipment.remove_switch', rack_id=rack.id, switch_id=sw.switch_id, side=current_side) }}"
+                hx-confirm="{{ _("Remove this switch from the rack?") }}"
+            >
+                <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="rack-switch-port-matrix">
+        {% for row in ('top', 'bottom') %}
+        {% set parity = top_parity if row == 'top' else 1 - top_parity %}
+        <div class="rack-switch-port-row rack-switch-port-row-{{ row }}">
+            {% for port in sw.ports %}
+                {% if port.port % 2 == parity and port.port not in optical %}{{ switch_port(port) }}{% endif %}
+            {% endfor %}
+            {% if optical %}
+                <span class="rack-switch-port-gap" aria-hidden="true"></span>
+                {% for port in sw.ports %}
+                    {% if port.port % 2 == parity and port.port in optical %}{{ switch_port(port, optical[port.port]) }}{% endif %}
+                {% endfor %}
+            {% endif %}
+            {# The management port, after a gap in the top row (no link state: not in SNMP). #}
+            {% if sw.mgmt_port and row == 'top' %}
+                <span class="rack-switch-port-gap" aria-hidden="true"></span>
+                {{ switch_port({"port": 0, "link": "", "expected": false, "if_name": _("Management Port"), "speed": "", "device": "", "description": ""}, "mng") }}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

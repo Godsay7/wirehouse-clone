@@ -1,0 +1,346 @@
+.changes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.changes-header h1 {
+    margin: 0;
+}
+
+.changes-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.changes-search input {
+    width: 420px;
+    max-width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    font-size: 14px;
+    outline: none;
+}
+
+.changes-search input:focus {
+    border-color: #6d9ff5;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.changes-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.changes-table th,
+.changes-table td {
+    padding: 9px 11px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid var(--border);
+}
+
+.changes-table thead th {
+    background: var(--surface-3);
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.changes-table tbody tr:hover {
+    background: var(--surface-2);
+}
+
+.changes-time {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.change-group-cell {
+    vertical-align: middle !important;
+    background: var(--surface-2);
+}
+
+.changes-table tbody tr:hover .change-group-cell {
+    background: var(--surface-2);
+}
+
+.changes-switch,
+.changes-interface {
+    white-space: nowrap;
+}
+
+.change-type {
+    display: inline-block;
+    min-width: 48px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-align: center;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.change-type-mac {
+    background: light-dark(#e9e3f8, #1f1830);
+    color: light-dark(#6045a6, #a693d8);
+}
+
+.change-type-link {
+    background: var(--ok-soft);
+    color: var(--ok-text);
+}
+
+.change-type-vlan {
+    background: var(--warn-soft);
+    color: var(--warn-text);
+}
+
+.change-value {
+    max-width: 420px;
+    overflow-wrap: anywhere;
+}
+
+.many-macs-history {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #6c757d;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.empty-history {
+    padding: 24px !important;
+    text-align: center !important;
+    color: var(--text-muted);
+}
+
+.history-lead {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 900px;
+}
+
+/* Rack change history */
+.rack-history-message {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background: var(--ok-soft);
+    color: var(--ok-text);
+}
+
+.rack-history-message.is-error {
+    background: var(--danger-soft);
+    color: var(--danger-text);
+}
+
+.rack-history-table td {
+    vertical-align: top;
+}
+
+.rack-history-table th:nth-child(1) { width: 56px; }
+.rack-history-table th:nth-child(2) { width: 170px; }
+.rack-history-table th:nth-child(3) { width: 230px; }
+/* Wide enough for "Скасувати" too. */
+.rack-history-table th:nth-child(5) { width: 120px; }
+
+/* "ADDS2.newshouse.lan (10.13.41.252)": the IP goes to the next line. */
+/* Cells do not wrap by default (base.css): "Who" and "What changed" do. */
+.rack-history-table td.rack-history-who,
+.rack-history-table td:nth-child(4) {
+    white-space: normal;
+}
+
+.rack-history-who {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.rack-history-line {
+    padding: 1px 0;
+    overflow-wrap: anywhere;
+}
+
+.rack-history-tag {
+    display: inline-block;
+    margin: 2px 0;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--text-2);
+    font-size: 12px;
+}
+
+.rack-history-table tr.is-undone .rack-history-line {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.rack-history-undo {
+    padding: 4px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Phones: each change is a card (number, time, who on one line, then the lines). */
+@media (max-width: 700px) {
+    .rack-history-table,
+    .rack-history-table tbody,
+    .rack-history-table tr,
+    .rack-history-table td {
+        display: block;
+        width: auto;
+    }
+
+    .rack-history-table thead {
+        display: none;
+    }
+
+    .rack-history-table tr {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .rack-history-table td {
+        padding: 0;
+        border: 0;
+    }
+
+    .rack-history-table td:nth-child(1) {
+        font-weight: 700;
+    }
+
+    .rack-history-table td:nth-child(2) {
+        color: var(--text-muted);
+    }
+
+    .rack-history-table td:nth-child(3) {
+        grid-column: 1 / -1;
+        margin: 2px 0 6px;
+        color: var(--text-muted);
+    }
+
+    .rack-history-table td:nth-child(4),
+    .rack-history-table td:nth-child(5) {
+        grid-column: 1 / -1;
+    }
+
+    .rack-history-table td:nth-child(5):not(:empty) {
+        margin-top: 8px;
+    }
+
+    .rack-history-table td.empty-history {
+        grid-column: 1 / -1;
+    }
+}
+
+.rack-history-more summary {
+    cursor: pointer;
+    color: var(--accent-text);
+    font-size: 13px;
+}
+
+@media (max-width: 800px) {
+    .changes-search {
+        flex-wrap: wrap;
+    }
+
+    .changes-search input {
+        width: 100%;
+    }
+}
+
+
+/* Switch History: an event (one or more rows) opens the switch at that port. */
+.changes-table tbody.row-link-group {
+    cursor: pointer;
+}
+
+.changes-table tbody.row-link-group:hover td,
+.changes-table tbody.row-link-group:hover .change-group-cell {
+    background: var(--surface-hover);
+}
+
+.changes-table tbody.row-link-group:hover .row-link-main strong {
+    color: var(--accent-text);
+}
+
+/* Switch History: fixed columns get their width, Old / New share the rest
+   (the table layout is fixed, so without widths every column was equal and
+   dates and switch names ran into the next column). */
+.switch-history-table {
+    min-width: 900px;
+}
+
+.switch-history-table th:nth-child(1) { width: 190px; }
+.switch-history-table th:nth-child(2) { width: 200px; }
+.switch-history-table th:nth-child(3) { width: 64px; }
+.switch-history-table th:nth-child(4) { width: 135px; }  /* the badge itself is 105px (.changes-table .change-type) */
+.switch-history-table th:nth-child(7) { width: 130px; }
+
+.switch-history-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Rack History: search and filters. */
+.history-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin: 0 0 16px;
+}
+
+.history-filters input,
+.history-filters select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-base);
+}
+
+.history-filters .history-filter-text {
+    flex: 1 1 260px;
+    max-width: 420px;
+}
+
+.history-filter-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+}
+
+.history-filters input:focus,
+.history-filters select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
+}
+

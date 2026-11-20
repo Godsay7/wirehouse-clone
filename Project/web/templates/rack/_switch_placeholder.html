@@ -1,0 +1,57 @@
+{# Temporary switch that is not in SNMP inventory yet. Uses: rack_row, editable, rack, current_side. #}
+{% set placeholder = rack_row.device.data %}
+{% if placeholder.is_primary %}
+    <div
+        class="rack-device switch-placeholder-device switch-placeholder-device-{{ placeholder.height_units }}u"
+        style="--rack-device-units: {{ placeholder.height_units }}; --rack-placeholder-height: calc(var(--rack-view-device-height, {{ placeholder.height_units * 58 }}px) - 10px);"{% if editable %} data-move-url="{{ url_for('equipment.move_placeholder', rack_id=rack.id, placeholder_id=placeholder.id) }}" data-move-key="switch_placeholder-{{ placeholder.id }}" data-move-top="{{ placeholder.rack_unit }}" data-move-height="{{ placeholder.height_units }}" data-move-name="{{ placeholder.name }}"{% endif %}
+    >
+        <div class="rack-device-header">
+            <div>
+                <div class="rack-device-name">
+                    {{ placeholder.name }}
+                    <span class="switch-placeholder-badge">{{ _("TEMP") }}</span>
+                </div>
+                <div class="rack-device-meta">
+                    {{ placeholder.model or _('Temporary switch placeholder') }} · {{ placeholder.height_units }}U{% if placeholder.port_count %} · {{ _n("{n} port", "{n} ports", placeholder.port_count) }}{% endif %}
+                </div>
+            </div>
+
+            {% if editable %}
+                <form
+                    class="rack-remove-form"
+                    method="post"
+                    action="{{ url_for('equipment.delete_placeholder', rack_id=rack.id, placeholder_id=placeholder.id) }}"
+                    hx-confirm="{{ _("Remove temporary switch {name} from the rack?", name=placeholder.name) }}"
+                >
+                    <input type="hidden" name="side" value="{{ current_side }}">
+                    <button class="rack-remove-button" type="submit">{{ _("Remove") }}</button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if placeholder.port_count > 0 %}
+            {# Real ports: they take cables like switch ports (endpoint type "placeholder").
+               Laid out like an SNMP switch: odd ports on the top row, even below. #}
+            {% set location = rack.server_room_name ~ ' / ' ~ rack.name ~ ' / ' ~ (_('Rear') if current_side == 'rear' else _('Front')) %}
+            <div class="rack-switch-port-matrix" aria-label="{{ _("Temporary switch port placeholders") }}">
+                {% for row in ('top', 'bottom') %}
+                <div class="rack-switch-port-row rack-switch-port-row-{{ row }}">
+                    {% for port_number in range(1 if row == 'top' else 2, placeholder.port_count + 1, 2) %}
+                        {% set note = placeholder.port_notes.get(port_number, '') %}
+                        <div id="placeholder-{{ placeholder.id }}-port-{{ port_number }}"
+                             class="rack-port switch-port temp-switch-port"
+                             data-endpoint-type="placeholder"
+                             data-placeholder-id="{{ placeholder.id }}"
+                             data-placeholder-port="{{ port_number }}"
+                             data-endpoint-label="{{ placeholder.name }} ({{ _("temporary") }}) / {{ _("Port") }} {{ port_number }}"
+                             data-endpoint-location="{{ location }}"
+                             title="{{ placeholder.name }} ({{ _("temporary") }})&#10;{{ _("Port:") }} {{ port_number }}{% if note %}&#10;{{ _("Note:") }} {{ note }}{% endif %}">{{ port_number }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="switch-placeholder-empty">{{ _("Reserved for future switch") }}</div>
+        {% endif %}
+    </div>
+{% endif %}

@@ -1,0 +1,844 @@
+/* ============================================================
+   COMPACT PHYSICAL SWITCH LAYOUT
+   1 top, 2 bottom, 3 top, 4 bottom...
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   Switch chassis
+   ------------------------------------------------------------ */
+
+.port-panel {
+    display: grid !important;
+
+    /*
+       ВАЖНО:
+
+       grid-auto-flow: column
+       + две строки
+
+       даст:
+
+       1  3  5  7  9
+       2  4  6  8  10
+    */
+
+    grid-template-rows:
+        repeat(2, 125px) !important;
+
+    grid-template-columns: none !important;
+
+    grid-auto-flow: column !important;
+
+    grid-auto-columns: 118px !important;
+
+    gap: 6px !important;
+
+    align-items: stretch !important;
+
+    justify-content: start !important;
+
+    width: 100% !important;
+
+    padding: 12px !important;
+
+    margin-bottom: 30px !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    background: #20262d !important;
+
+    border-radius: 10px !important;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.18) !important;
+}
+
+
+/* ------------------------------------------------------------
+   Compact physical port
+   ------------------------------------------------------------ */
+
+.port-panel .port {
+    position: relative !important;
+
+    display: block !important;
+
+    width: 118px !important;
+    min-width: 118px !important;
+    max-width: 118px !important;
+
+    height: 125px !important;
+    min-height: 125px !important;
+    max-height: 125px !important;
+
+    padding: 7px !important;
+
+    margin: 0 !important;
+
+    border-radius: 6px !important;
+
+    overflow: hidden !important;
+
+    color: #ffffff !important;
+}
+
+
+/* ============================================================
+   Port number
+   ============================================================ */
+
+.port-panel .port-number {
+    position: absolute !important;
+
+    top: 6px !important;
+    left: 7px !important;
+
+    font-size: 17px !important;
+    line-height: 18px !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* ============================================================
+   Speed
+   ============================================================ */
+
+.port-panel .port-speed {
+    position: absolute !important;
+
+    top: 5px !important;
+    right: 5px !important;
+
+    padding: 2px 4px !important;
+
+    border-radius: 4px !important;
+
+    font-size: 8px !important;
+    line-height: 11px !important;
+
+    background:
+        rgba(0, 0, 0, 0.25) !important;
+}
+
+
+/* ============================================================
+   Device
+   ============================================================ */
+
+.port-panel .port-device {
+    position: absolute !important;
+
+    top: 29px !important;
+
+    left: 7px !important;
+    right: 7px !important;
+
+    height: 14px !important;
+
+    font-size: 9px !important;
+    line-height: 14px !important;
+
+    font-weight: 600 !important;
+
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
+/* ============================================================
+   IP
+   ============================================================ */
+
+.port-panel .port-ip {
+    position: absolute !important;
+
+    top: 47px !important;
+
+    left: 7px !important;
+    right: 7px !important;
+
+    height: 13px !important;
+
+    font-size: 8px !important;
+    line-height: 13px !important;
+
+    font-family: var(--font-mono) !important;
+
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
+/* ============================================================
+   Hostname
+   ============================================================ */
+
+.port-panel .port-hostname {
+    position: absolute !important;
+
+    top: 63px !important;
+
+    left: 7px !important;
+    right: 7px !important;
+
+    height: 13px !important;
+
+    font-size: 8px !important;
+    line-height: 13px !important;
+
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
+/* ============================================================
+   MAC
+   ============================================================ */
+
+.port-panel .port-mac {
+    position: absolute !important;
+
+    top: 79px !important;
+
+    left: 7px !important;
+    right: 7px !important;
+
+    height: 13px !important;
+
+    font-size: 7px !important;
+    line-height: 13px !important;
+
+    font-family: var(--font-mono) !important;
+
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
+/* ============================================================
+   Link
+   ============================================================ */
+
+.port-panel .port-link {
+    position: absolute !important;
+
+    bottom: 6px !important;
+    left: 7px !important;
+
+    font-size: 8px !important;
+    line-height: 11px !important;
+
+    font-weight: 800 !important;
+}
+
+
+/* ============================================================
+   Interface
+   ============================================================ */
+
+.port-panel .port-interface {
+    position: absolute !important;
+
+    bottom: 6px !important;
+    right: 6px !important;
+
+    max-width: 62px !important;
+
+    font-size: 7px !important;
+    line-height: 11px !important;
+
+    font-family: var(--font-mono) !important;
+
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
+/* ============================================================
+   Slight hover
+   ============================================================ */
+
+.port-panel .port:hover {
+    transform: translateY(-1px) !important;
+
+    box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.30) !important;
+
+    z-index: 10;
+}
+
+
+/* ============================================================
+   Horizontal scrollbar
+   ============================================================ */
+
+.port-panel::-webkit-scrollbar {
+    height: 9px;
+}
+
+.port-panel::-webkit-scrollbar-track {
+    background: #171c21;
+
+    border-radius: 5px;
+}
+
+.port-panel::-webkit-scrollbar-thumb {
+    background: #59636d;
+
+    border-radius: 5px;
+}
+
+.port-panel::-webkit-scrollbar-thumb:hover {
+    background: #707b86;
+}
+
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .port-panel {
+        grid-template-rows:
+            repeat(2, 115px) !important;
+
+        grid-auto-columns:
+            108px !important;
+    }
+
+    .port-panel .port {
+        width: 108px !important;
+        min-width: 108px !important;
+        max-width: 108px !important;
+
+        height: 115px !important;
+        min-height: 115px !important;
+        max-height: 115px !important;
+    }
+
+}
+
+/* ============================================================
+   COMPACT PHYSICAL SWITCH PANEL
+   ============================================================ */
+
+
+/* ============================================================
+   Legend
+   ============================================================ */
+
+.compact-port-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 22px;
+
+    width: 100%;
+
+    margin: 0 0 14px 0;
+
+    padding: 11px 16px;
+
+    background: light-dark(#ffffff, #1b1b1b);
+
+    border: 1px solid light-dark(#dfe3e8, #3c4147);
+
+    border-radius: 9px;
+
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+
+.compact-legend-item {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.compact-legend-color {
+    display: inline-block;
+
+    width: 18px;
+    height: 18px;
+
+    border-radius: 4px;
+
+    border:
+        1px solid rgba(0, 0, 0, 0.15);
+}
+
+
+.compact-legend-up {
+    background: #187a4f;
+}
+
+
+.compact-legend-down {
+    background: #c4223d;
+}
+
+
+.compact-legend-unknown {
+    background: #707b84;
+}
+
+
+.compact-legend-idle {
+    background: #3a4550;
+}
+
+
+/* ============================================================
+   Outer chassis
+   ============================================================ */
+
+.compact-switch-wrapper {
+    position: relative;
+
+    width: 100%;
+
+    overflow-x: auto;
+    overflow-y: visible;
+
+    margin-bottom: 32px;
+
+    padding: 12px;
+
+    background: #1e252c;
+
+    border-radius: 10px;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.20);
+}
+
+
+/* ============================================================
+   Switch internal area
+   ============================================================ */
+
+.compact-switch-panel {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    width: max-content;
+
+    min-width: 100%;
+}
+
+
+/* ============================================================
+   Physical row
+   ============================================================ */
+
+.compact-port-row {
+    display: flex;
+
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    gap: 5px;
+
+    width: max-content;
+}
+
+
+/* ============================================================
+   Individual physical port
+   ============================================================ */
+
+.compact-port {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    min-width: 40px;
+    min-height: 40px;
+
+    max-width: 40px;
+    max-height: 40px;
+
+    padding: 0;
+
+    margin: 0;
+
+    border-radius: 5px;
+
+    border:
+        1px solid light-dark(rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.2));
+
+    box-sizing: border-box;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.12s ease,
+        filter 0.12s ease,
+        box-shadow 0.12s ease;
+}
+
+
+/* ============================================================
+   Port colors
+   ============================================================ */
+
+/* White port numbers stay readable (WCAG AA, 4.5:1). */
+.compact-port-up {
+    background: #187a4f;
+}
+
+
+.compact-port-down {
+    background: #c4223d;
+}
+
+
+.compact-port-unknown {
+    background: #707b84;
+}
+
+
+/* A free port (down, nothing expected on it): quiet, so that the red
+   ones stand out. */
+.compact-port-idle {
+    background: #3a4550;
+    color: #aeb8c2;
+}
+
+
+/* ============================================================
+   Port number
+   ============================================================ */
+
+.compact-port-number {
+    display: block;
+
+    margin: 0;
+    padding: 0;
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    text-align: center;
+
+    user-select: none;
+}
+
+
+/* ============================================================
+   Hover
+   ============================================================ */
+
+.compact-port:hover {
+    transform: scale(1.10);
+
+    filter: brightness(1.08);
+
+    box-shadow:
+        0 5px 14px rgba(0, 0, 0, 0.35);
+
+    z-index: 10000;
+}
+
+
+/* ============================================================
+   Tooltip
+   ============================================================ */
+
+.compact-port-tooltip {
+    visibility: hidden;
+
+    opacity: 0;
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: calc(100% + 12px);
+
+    transform:
+        translateX(-50%)
+        translateY(4px);
+
+    width: 310px;
+
+    padding: 14px 16px;
+
+    background: #20272e;
+
+    color: #ffffff;
+
+    border:
+        1px solid #48515a;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.45);
+
+    box-sizing: border-box;
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    text-align: left;
+
+    white-space: normal;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.12s ease,
+        transform 0.12s ease,
+        visibility 0.12s ease;
+
+    z-index: 20000;
+}
+
+
+/* Show tooltip */
+
+.compact-port:hover .compact-port-tooltip {
+    visibility: visible;
+
+    opacity: 1;
+
+    transform:
+        translateX(-50%)
+        translateY(0);
+}
+
+
+/* ============================================================
+   Tooltip arrow
+   ============================================================ */
+
+.compact-port-tooltip::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 100%;
+
+    transform:
+        translateX(-50%);
+
+    width: 0;
+    height: 0;
+
+    border-left:
+        7px solid transparent;
+
+    border-right:
+        7px solid transparent;
+
+    border-top:
+        7px solid #20272e;
+}
+
+
+/* ============================================================
+   Tooltip title
+   ============================================================ */
+
+.compact-tooltip-title {
+    margin-bottom: 8px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   Tooltip row
+   ============================================================ */
+
+.compact-tooltip-row {
+    display: block;
+
+    margin: 3px 0;
+
+    overflow-wrap: anywhere;
+}
+
+
+.compact-tooltip-label {
+    font-weight: 600;
+
+    color: #d5dae0;
+}
+
+
+/* ============================================================
+   Tooltip separator
+   ============================================================ */
+
+.compact-tooltip-separator {
+    height: 1px;
+
+    margin: 9px 0;
+
+    background:
+        rgba(255, 255, 255, 0.15);
+}
+
+
+/* ============================================================
+   Tooltip link state
+   ============================================================ */
+
+.compact-tooltip-up {
+    color: light-dark(#35d07f, #7ee5af);
+
+    font-weight: 700;
+}
+
+
+.compact-tooltip-down {
+    color: #ff536b;
+
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   Tooltip MAC
+   ============================================================ */
+
+.compact-tooltip-mac {
+    font-family: var(--font-mono);
+
+    font-size: 12px;
+}
+
+
+/* ============================================================
+   Port Details
+   ============================================================ */
+
+.port-details-title {
+    margin-top: 12px;
+}
+
+
+/* ============================================================
+   IP / Hostname table
+   ============================================================ */
+
+.ip-address {
+    font-family: var(--font-mono);
+
+    white-space: nowrap;
+}
+
+
+.hostname {
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   Horizontal scrollbar
+   ============================================================ */
+
+.compact-switch-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+
+.compact-switch-wrapper::-webkit-scrollbar-track {
+    background: #161c21;
+
+    border-radius: 5px;
+}
+
+
+.compact-switch-wrapper::-webkit-scrollbar-thumb {
+    background: #58636d;
+
+    border-radius: 5px;
+}
+
+
+.compact-switch-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #707c87;
+}
+
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .compact-port {
+        width: 36px;
+        height: 36px;
+
+        min-width: 36px;
+        min-height: 36px;
+
+        max-width: 36px;
+        max-height: 36px;
+    }
+
+
+    .compact-port-number {
+        font-size: 12px;
+    }
+
+
+    .compact-port-row {
+        gap: 4px;
+    }
+
+
+    .compact-switch-panel {
+        gap: 4px;
+    }
+
+
+    .compact-port-tooltip {
+        width: 260px;
+
+        font-size: 12px;
+    }
+
+}

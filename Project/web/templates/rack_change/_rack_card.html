@@ -1,0 +1,80 @@
+{# Rack selector, add / delete rack. #}
+<div class="rack-card">
+    <h3>{{ _("Rack") }}</h3>
+
+    {% if selected_room %}
+        {% if racks %}
+            <form class="rack-form" onsubmit="return false;" hx-boost="false">
+                <label>
+                    {{ _("Current Rack") }}
+                    <select id="rack-selector">
+                        {% for rack_option in racks|sort(attribute='name') %}
+                            <option
+                                value="{{ rack_option.id }}"
+                                {% if rack and rack_option.id == rack.id %}selected{% endif %}
+                            >
+                                {{ rack_option.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </form>
+        {% endif %}
+
+        {# Always offered once a room is chosen: the first rack of an empty room too
+           (there the form is open right away). Add / delete: only for a signed-in user. #}
+        {% if can_edit %}
+            <button class="rack-add-btn" id="btn-add-rack" data-target="form-add-rack" type="button" data-requires-login>{{ _("Add Rack") }}</button>
+
+            <div id="form-add-rack" class="rack-form-popup form-popup-inline" data-trigger="btn-add-rack"{% if rack %} style="display: none;"{% endif %}>
+                <div class="rack-form-header">
+                    <h3>{{ _("New Rack") }}</h3>
+                    <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+                </div>
+                <form class="rack-form" method="post" action="{{ url_for('rack_change.create_rack') }}">
+                    <input type="hidden" name="server_room_id" value="{{ selected_room.id }}">
+                    <input type="hidden" name="side" value="{{ current_side }}">
+                    <label>
+                        {{ _("New Rack Name") }}
+                        <input type="text" name="name" placeholder="{{ _('Rack 1') }}" required>
+                    </label>
+                    <label>
+                        {{ _("Rack Units") }}
+                        <input type="number" name="units" value="42" min="1" max="100">
+                    </label>
+                    <button class="button" type="submit">{{ _("Save") }}</button>
+                </form>
+            </div>
+
+        {% if rack %}
+            {# A narrower rack (tower PCs by a wall): the board keeps one scale, this rack is just narrower. #}
+            <form class="rack-form rack-width-form" method="post" action="{{ url_for('rack_change.rack_width', rack_id=rack.id) }}">
+                <input type="hidden" name="side" value="{{ current_side }}">
+                <label>
+                    {{ _("Rack width") }}
+                    <select name="width_percent" onchange="this.form.requestSubmit()">
+                        {% for value, label in ((100, "Full"), (66, "2/3"), (50, "1/2"), (33, "1/3")) %}
+                        <option value="{{ value }}"{% if (rack.width_percent or 100) == value %} selected{% endif %}>{{ _(label) }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </form>
+            <form
+                class="rack-delete-form"
+                method="post"
+                action="{{ url_for('rack_change.delete_rack', rack_id=rack.id) }}"
+                hx-confirm="{{ _("Delete this rack and all Rack View data inside it? Cross-rack visual connections touching this rack will also be removed. Switch (SNMP) data will NOT be deleted.") }}"
+            >
+                <input type="hidden" name="side" value="{{ current_side }}">
+                <button class="rack-delete-button" type="submit">{{ _("Delete Rack") }}</button>
+            </form>
+        {% endif %}
+        {% endif %}
+
+        <div class="rack-help rack-help-spaced">
+            {{ _("Rack names are unique only inside the selected server room.") }}
+        </div>
+    {% else %}
+        <div class="rack-help">{{ _("Create a server room first.") }}</div>
+    {% endif %}
+</div>

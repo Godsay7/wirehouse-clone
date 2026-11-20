@@ -1,0 +1,46 @@
+{# Add Server popup form. #}
+<button class="rack-add-btn" id="btn-add-server" data-target="form-add-server" type="button" data-requires-login>{{ _("Add Server") }}</button>
+
+<div id="form-add-server" class="rack-card rack-form-popup form-popup-below" data-trigger="btn-add-server" style="display: none;">
+    <div class="rack-form-header">
+        <h3>{{ _("Add Server") }}</h3>
+        <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+    </div>
+    <form class="rack-form" method="post" action="{{ url_for('equipment.add_server', rack_id=rack.id) }}">
+        <input type="hidden" name="side" value="{{ current_side }}">
+
+        <label>
+            {{ _("Server Name") }}
+            <input type="text" name="name" placeholder="SRV-01" required>
+        </label>
+
+        <label>
+            {{ _("Starting Rack Unit") }}
+            <input type="number" name="rack_unit" min="1" max="{{ rack.units }}" required>
+        </label>
+
+        <label>
+            {{ _("Height (in U)") }}
+            <input type="number" name="height_units" value="1" min="1" max="{{ rack.units }}" required>
+        </label>
+
+        <label>
+            {{ _("Depth") }}
+            <select name="depth">
+                <option value="full">{{ _("Full depth (front + rear)") }}</option>
+                <option value="half">{{ (_("Only the rear side") if current_side == 'rear' else _("Only the front side")) }}</option>
+            </select>
+        </label>
+
+        <label>
+            {{ _("Ports count") }}
+            <input type="number" name="port_count" value="2" min="0" required>
+        </label>
+
+        <button class="button" type="submit">{{ _("Save") }}</button>
+    </form>
+    <div class="rack-help rack-help-spaced">
+        <b>{{ _("Full depth") }}</b>: {{ _("the device takes the units on both Front and Rear sides, ports are on the Rear side.") }}
+        <b>{{ (_("Only the rear side") if current_side == 'rear' else _("Only the front side")) }}</b>: {{ _("a short device (audio console, PDU…) — the units on the other side stay free, ports are on this side.") }}
+    </div>
+</div>

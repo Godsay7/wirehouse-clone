@@ -1,0 +1,31 @@
+{# Add Cable Organizer popup form. #}
+<button class="rack-add-btn" id="btn-add-organizer" data-target="form-add-organizer" type="button" data-requires-login>{{ _("Add Cable Organizer") }}</button>
+
+<div id="form-add-organizer" class="rack-card rack-form-popup form-popup-below" data-trigger="btn-add-organizer" style="display: none;">
+    <div class="rack-form-header">
+        <h3>{{ _("Add Cable Organizer") }} · {{ _('Rear') if current_side == 'rear' else _('Front') }}</h3>
+        <button type="button" class="rack-form-close" aria-label="{{ _("Cancel") }}">✕</button>
+    </div>
+    <form class="rack-form" method="post" action="{{ url_for('equipment.add_organizer', rack_id=rack.id) }}">
+        <input type="hidden" name="side" value="{{ current_side }}">
+        <label>
+            {{ _("Name") }}
+            <input type="text" name="name" value="Cable Organizer" placeholder="{{ _("Cable Organizer") }}">
+        </label>
+        <label>
+            {{ _("Rack Unit") }}
+            <input type="number" name="rack_unit" min="1" max="{{ rack.units }}" required>
+        </label>
+        <label>
+            {{ _("Height") }}
+            <select name="height_units">
+                <option value="1" selected>1U</option>
+                <option value="2">2U</option>
+            </select>
+        </label>
+        <button class="button" type="submit">{{ _("Save") }}</button>
+    </form>
+    <div class="rack-help rack-help-spaced">
+        {{ _("For a 2U organizer, Rack Unit is the lower U. For example, U10 occupies U10 and U11.") }}
+    </div>
+</div>

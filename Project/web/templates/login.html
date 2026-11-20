@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Sign in") }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <form class="auth-form" method="post" action="{{ url_for('auth.login') }}">
+        <h1>{{ _("Sign in") }}</h1>
+        <p class="auth-lead">{{ _("Everyone can view the site. Sign in to change racks, cables, maps and device names.") }}</p>
+
+        {% if error %}
+        <div class="auth-error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <label>
+            <span>{{ _("User name") }}</span>
+            <input type="text" name="username" value="{{ username }}" autocomplete="username"
+                   autocapitalize="none" spellcheck="false" required {% if not username %}autofocus{% endif %}>
+        </label>
+        <label>
+            <span>{{ _("Password") }}</span>
+            <input type="password" name="password" autocomplete="current-password" required {% if username %}autofocus{% endif %}>
+        </label>
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="auth-actions">
+            <button type="submit" class="button">{{ _("Sign in") }}</button>
+            <a class="button secondary" href="{{ next }}">{{ _("Back") }}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

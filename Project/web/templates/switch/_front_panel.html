@@ -1,0 +1,141 @@
+{# Physical front panel: standard / MikroTik / Cisco 4900M layouts. #}
+{% from "switch/_macros.html" import render_port with context %}
+
+<div class="compact-switch-wrapper">
+
+    {% if port_layout == "cisco_4900m" and cisco_4900m_panel %}
+
+        <!--
+            Cisco Catalyst 4900M:
+
+            Modules 2 and 3 are expansion half-cards.  Each physical
+            X2 position can be represented either by one Te interface
+            or by two Gi interfaces when a TwinGig converter is used.
+
+            Example mapping:
+                Te2/1 <-> Gi2/9 + Gi2/10
+                Te2/2 <-> Gi2/11 + Gi2/12
+
+            Te1/1 ... Te1/8 are the fixed chassis 10G ports.
+        -->
+
+        <div class="compact-switch-panel c4900m-panel">
+
+            <div class="c4900m-expansion-row">
+
+                {% for module in cisco_4900m_panel.modules %}
+                    <div class="c4900m-module">
+                        <div class="c4900m-module-title">
+                            {{ _("Module") }} {{ module.module }}
+                        </div>
+
+                        <div class="c4900m-module-grid">
+                            {% for slot in module.slots %}
+                                <div class="c4900m-slot">
+                                    <div class="c4900m-slot-main">
+
+                                        {% if slot.mode == "gigabit" %}
+                                            {% for port in slot.display_ports %}
+                                                {{ render_port(
+                                                    port,
+                                                    port.if_name,
+                                                    "c4900m-gig-port"
+                                                ) }}
+                                            {% endfor %}
+
+                                        {% elif slot.mode == "ten_gigabit" %}
+                                            {% for port in slot.display_ports %}
+                                                {{ render_port(
+                                                    port,
+                                                    port.if_name,
+                                                    "c4900m-te-port"
+                                                ) }}
+                                            {% endfor %}
+
+                                        {% else %}
+                                            <div class="c4900m-empty-slot">
+                                                {{ _("Slot") }} {{ slot.slot }}
+                                            </div>
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div class="c4900m-alt-label">
+                                        {% if slot.mode == "gigabit" %}
+                                            TwinGig / {{ slot.te_port.if_name if slot.te_port else "Te" }}
+                                        {% elif slot.gi_ports %}
+                                            Alt:
+                                            {% for port in slot.gi_ports %}
+                                                {{ port.if_name }}{% if not loop.last %} / {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+            </div>
+
+            <div class="c4900m-fixed-module">
+                <div class="c4900m-module-title">
+                    {{ _("Fixed 10G ports") }}
+                </div>
+
+                <div class="c4900m-fixed-grid">
+                    {% for port in cisco_4900m_panel.fixed_ports %}
+                        {{ render_port(
+                            port,
+                            port.if_name,
+                            "c4900m-fixed-port"
+                        ) }}
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="compact-switch-panel">
+
+            {% set top_parity = 0 if port_layout == "mikrotik" else 1 %}
+            {% set bottom_parity = 1 if port_layout == "mikrotik" else 0 %}
+
+            <!--
+                Standard switches:
+                  top    = 1, 3, 5...
+                  bottom = 2, 4, 6...
+
+                MikroTik:
+                  top    = 2, 4, 6...
+                  bottom = 1, 3, 5...
+            -->
+
+            {# Optical ports (SFP / uplink module) come after a gap, with their own
+               numbering: Te1, Te2..., Gi1..., SFP1... (domain/vendors.py). #}
+            {% set optical = optical_labels or {} %}
+            {% for parity in (top_parity, bottom_parity) %}
+            <div class="compact-port-row">
+                {% for port in all_ports %}
+                    {% if port.port|int % 2 == parity and port.port|int not in optical %}
+                        {{ render_port(port) }}
+                    {% endif %}
+                {% endfor %}
+                {% if optical %}
+                    <span class="compact-port-gap" aria-hidden="true"></span>
+                    {% for port in all_ports %}
+                        {% if port.port|int % 2 == parity and port.port|int in optical %}
+                            {{ render_port(port, optical[port.port|int], "compact-port-optical") }}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>

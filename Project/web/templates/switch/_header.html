@@ -1,0 +1,38 @@
+{# Switch name, model and port statistics. #}
+<div class="page-header">
+
+    <div>
+        <div class="switch-title-block">
+            <h1>{{ switch.host }}</h1>
+
+            <div class="switch-device-info">
+                <span>
+                    <strong>{{ _("Model:") }}</strong>
+                    {{ switch.model or "-" }}
+                </span>
+
+                <span>
+                    <strong>{{ _("System Name:") }}</strong>
+                    {{ switch.sys_name or "-" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="muted-text">
+            {{ _("Last Seen:") }} {{ format_datetime(switch.last_seen) }}
+        </div>
+    </div>
+
+    <div class="switch-header-actions">
+        {% if can_edit %}
+        <a href="{{ url_for('checks.cable_journal', fmt='xlsx', switch_id=switch.id) }}" class="button"
+           title="{{ _("Every port of this switch with its documented cable and live state") }}">
+            {{ _("Export cable journal") }}
+        </a>
+        {% endif %}
+        <a href="{{ url_for('dashboard.index') }}" class="button secondary">
+            {{ _("Back") }}
+        </a>
+    </div>
+
+</div>
